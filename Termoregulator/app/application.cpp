@@ -76,6 +76,9 @@ void readData()
 
 void init()
 {
+
+	// wifi config
+
 	pinMode(LED_PIN, OUTPUT);
 
 	disp.setPoint(POINT2);

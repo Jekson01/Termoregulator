@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>hi</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.css" rel="stylesheet">
+  <script src="jquery.js"></script>
+  
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <script>
+  $( document ).ready(function() {
+  
+    (function worker() {
+      var t = $(this).attr('data-value');
+      $.getJSON('ajax/temperatura', {value: t}, function(data) {
+        $("#display-temp").text(data.value.toFixed(1));
+        
+      });
+      setTimeout(worker, 5000);
+
+    })();
+    
+  });
+  </script>
+  <body>
+
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#">Home</a></li>
+            <li role="presentation"><a href="#">About</a></li>
+            <li role="presentation"><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Base on ESP8266</h3>
+      </div>
+
+      <!-- <div class="jumbotron">
+        <h1>Терморегулятор</h1>
+      </div> -->
+
+      <div class="row marketing"  style="text-align: center;">
+                
+        <div class="col-lg-6">
+            <h1>Температура</h1>
+               <div id="display-temp" class="well well-lg" style="font-size: 100pt">N/A</div>
+        </div>
+
+    
+      </div>
+    
+      <footer class="footer">
+        <p align="right">&copy; 2017</p>
+      </footer>
+
+    </div> <!-- /container -->
+  </body>
+</html>
