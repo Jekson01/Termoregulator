@@ -26,10 +26,18 @@
   $( document ).ready(function() {
   
     (function worker() {
-      var t = $(this).attr('data-value');
-      $.getJSON('ajax/temperatura', {value: t}, function(data) {
-        $("#display-temp").text(data.value.toFixed(1));
-        
+      $.getJSON('ajax/temperatura', function(data){
+        var items = [];
+        $(".my-new-list").empty();
+        $.each(data, function(key, val){
+          items.push("<li id='" + key + "'>"+ "<div id='sensor' class='well well-lg' style='font-size: 50pt'>" + val.toFixed(1) + "</div></li>");
+          //$('#sensor' + key).text(val.toFixed(1));
+        });
+          $( "<ul/>", {
+            "class": "my-new-list",
+            html: items.join( "" )
+          }).appendTo( "body" );
+
       });
       setTimeout(worker, 5000);
 
@@ -57,10 +65,25 @@
 
       <div class="row marketing"  style="text-align: center;">
                 
-        <div class="col-lg-6">
-            <h1>Температура</h1>
-               <div id="display-temp" class="well well-lg" style="font-size: 100pt">N/A</div>
+        <!-- <div class="col-lg-6">
+            <h1>Датчик 1</h1>
+               <div id="sensor0" class="well well-lg" style="font-size: 50pt">N/A</div>
         </div>
+
+        <div class="col-lg-6">
+            <h1>Датчик 2</h1>
+               <div id="sensor1" class="well well-lg" style="font-size: 50pt">N/A</div>
+        </div>
+
+        <div class="col-lg-6">
+            <h1>Датчик 3</h1>
+               <div id="sensor2" class="well well-lg" style="font-size: 50pt">N/A</div>
+        </div>
+
+        <div class="col-lg-6">
+            <h1>Датчик 4</h1>
+               <div id="sensor3" class="well well-lg" style="font-size: 50pt">N/A</div>
+        </div> -->
 
     
       </div>

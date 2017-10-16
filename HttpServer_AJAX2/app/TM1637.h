@@ -17,22 +17,7 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
-#define CLK	5
-#define DIO	4
-#define POINT_NUM	2
-
-#define DGT_COUNT	3
-
-#define CLK_SET pinMode(CLK, INPUT)
-#define CLK_CLR pinMode(CLK, OUTPUT);\
-				digitalWrite(CLK, LOW)
-
-
-#define DIO_SET pinMode(DIO, INPUT)
-#define DIO_CLR	pinMode(DIO, OUTPUT);\
-				digitalWrite(DIO, LOW);
-
-#define DIO_READ	digitalRead(DIO)
+#define DGT_COUNT	6
 
 #define MAX_BRIGHT	8
 #define MIN_BRIGHT	0
@@ -62,26 +47,34 @@
 
 
 class TM1637 {
+	uint16_t clkPin;
+	uint16_t dioPin;
 	uint8_t bright;
 	uint8_t points;
+	uint8_t pointPin;
+	char* charTable;
 	bool showOn;
 	uint8_t digits[DGT_COUNT];
+
 	void start();
 	void stop();
 	void ask();
 	void writeByte(uint8_t data);
 	void setDisplayControl();
+	void setClk(uint8_t state);
+	void setDio(uint8_t state);
+	bool getDio();
 public:
 	TM1637();
-	void initialize();
+	void initialize(uint16_t clk, uint16_t dio, char* data, uint8_t pointPin);
 	void update();
 	uint8_t scanKey();
 	void setBright(uint8_t br);
 	void on();
 	void off();
 	void printChar(uint8_t pos, uint8_t data);
-	void print(uint16_t data);
 	void setPoint(uint8_t pos);
+	void print(uint16_t data);
 };
 
 #endif /* APP_TM1637_H_ */

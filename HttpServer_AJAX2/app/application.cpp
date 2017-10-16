@@ -3,9 +3,31 @@
 #include <Libraries/OneWire/OneWire.h>
 
 #include <Libraries/DS18S20/ds18s20.h>
-#include "TM1637.h"
 
-TM1637 disp;
+//#include "UI.h"
+#include "TM1637.h"
+#include "RelayRegulator.h"
+
+#ifdef DEBUG_DS18S20
+#undef DEBUG_DS18S20
+#endif
+
+
+#define KEY1	232
+#define KEY2	233
+#define KEY3	237
+#define KEY4	238
+
+TM1637 tm;
+
+
+char charTab[] = {0xEB,0x09,0xF1,0xB9,
+		         0x1B,0xBA,0xFA,0x89,
+		         0xFB,0xBB,0xDB,0x7A,
+		         0xE2,0x79,0xF2,0xD2};//0~9,A,b,C,d,E,F
+
+
+RelayRegulator regulator;
 
 // If you want, you can define WiFi settings globally in Eclipse Environment Variables
 #ifndef WIFI_SSID
@@ -18,8 +40,16 @@ FTPServer ftp;
 
 DS18S20 ReadTemp;
 Timer procTimer;
+Timer displayUpdateTimer;
 
-float Temperatura;
+bool relayState = false;
+
+int16_t Temperatura;
+uint8_t sensorCount = 0;
+
+void onSwitchRelay(bool state){
+	relayState = state;
+}
 
 void onIndex(HttpRequest &request, HttpResponse &response)
 {
@@ -49,9 +79,30 @@ void onFile(HttpRequest &request, HttpResponse &response)
 void onAjaxTemperatura(HttpRequest &request, HttpResponse &response){
 	JsonObjectStream* stream = new JsonObjectStream();
 	JsonObject& json = stream->getRoot();
-	json["status"] = (bool)true;
-	json["value"] = Temperatura;
+	if (sensorCount > 0)
+	{
+		json["status"] = (bool)true;
+		JsonObject& sensor = json.createNestedObject("sensor");
+		sensor["temperatura"] = (int16_t)Temperatura;
+		sensor["state"] = (bool)regulator.isRelOut();
+		sensor["mode"] = (bool)regulator.isHeating();
+	}
+	else json["status"] = (bool)false;
+	response.sendDataStream(stream, MIME_JSON);
+}
 
+void onAjaxSetParams(HttpRequest &request, HttpResponse &response){
+	int tUp = request.getQueryParameter("tup").toInt();
+	int tDown = request.getQueryParameter("tdown").toInt();
+	regulator.setOnOffTemperature(tUp, tDown);
+}
+
+void onAjaxGetParam(HttpRequest &request, HttpResponse &response) {
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+	JsonObject& param = json.createNestedObject("param");
+	param["tup"] = regulator.getUpT();
+	param["tdown"] = regulator.getDownT();
 	response.sendDataStream(stream, MIME_JSON);
 }
 
@@ -60,11 +111,13 @@ void startWebServer()
 	server.listen(80);
 	server.addPath("/", onIndex);
 	server.addPath("/ajax/temperatura", onAjaxTemperatura);
+	server.addPath("/ajax/setparams", onAjaxSetParams);
+	server.addPath("/ajax/getparams", onAjaxGetParam);
 	server.setDefaultHandler(onFile);
 
-	Serial.println("\r\n=== NEW WEB SERVER STARTED ===");
-	Serial.println(WifiStation.getIP());
-	Serial.println("==============================\r\n");
+	//Serial.println("\r\n=== NEW WEB SERVER STARTED ===");
+	//Serial.println(WifiStation.getIP());
+	//Serial.println("==============================\r\n");
 }
 
 void startFTP()
@@ -79,49 +132,24 @@ void startFTP()
 
 void readData()
 {
-	uint8_t a;
-		uint64_t info;
+	uint64_t info = 0;
 
-		if (!ReadTemp.MeasureStatus())  // the last measurement completed
+	if (!ReadTemp.MeasureStatus())  // the last measurement completed
+	{
+	  if (ReadTemp.GetSensorsCount())   // is minimum 1 sensor detected ?
+		  sensorCount = ReadTemp.GetSensorsCount();
+		for(uint8_t a = 0; a < sensorCount; a++)   // prints for all sensors
 		{
-	      if (ReadTemp.GetSensorsCount())   // is minimum 1 sensor detected ?
-			//Serial.println("******************************************");
-		    //Serial.println(" Reding temperature DEMO");
-		    for(a=0;a<ReadTemp.GetSensorsCount();a++)   // prints for all sensors
-		    {
-		      //Serial.print(" T");
-		      //Serial.print(a+1);
-		      //Serial.print(" = ");
-		      if (ReadTemp.IsValidTemperature(a))   // temperature read correctly ?
-		        {
-		    	  float T = ReadTemp.GetCelsius(a);
-		    	  //Serial.print(T);
-		    	  Temperatura = T;
-		    	  disp.print((uint16_t)(T * 10));
-		    	  disp.update();
-		    	  //Serial.print(" Celsius, (");
-		    	  //Serial.print(ReadTemp.GetFahrenheit(a));
-		    	  //Serial.println(" Fahrenheit)");
-		        }
-		      else
-		    	  Serial.println("Temperature not valid");
-
-		      //Serial.print(" <Sensor id.");
-
-		      //info=ReadTemp.GetSensorID(a)>>32;
-		      //Serial.print((uint32_t)info,16);
-		      //Serial.print((uint32_t)ReadTemp.GetSensorID(a),16);
-		      //Serial.println(">");
-		    }
-			Serial.println("******************************************");
-			ReadTemp.StartMeasure();  // next measure, result after 1.2 seconds * number of sensors
+		  if (ReadTemp.IsValidTemperature(a))   // temperature read correctly ?
+			{
+			  float T = ReadTemp.GetCelsius(a);
+			  //Serial.println(T);
+			  Temperatura = (int16_t)(T * 10);
+			  regulator.check(Temperatura);
+			}
 		}
-		else{
-			//Serial.println("No valid Measure so far! wait please");
-		}
-
-
-
+		ReadTemp.StartMeasure();  // next measure, result after 1.2 seconds * number of sensors
+	}
 }
 
 void gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
@@ -130,19 +158,29 @@ void gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
 	startWebServer();
 }
 
+uint8_t sensorPos = 0;
+
+void updateUI(){
+	uint8_t key = tm.scanKey();
+	tm.print(Temperatura);
+
+	tm.update();
+}
+
 void init()
 {
-	disp.setPoint(POINT2);
-	disp.print(0);
-	disp.update();
+	tm.initialize(5, 4, charTab, 2);
+	tm.setPoint(POINT2);
+	regulator.regSwitchRelayCallback(onSwitchRelay);
 	ReadTemp.Init(14);  			// select PIN It's required for one-wire initialization!
 	ReadTemp.StartMeasure(); // first measure start,result after 1.2 seconds * number of sensors
 
-	procTimer.initializeMs(5000, readData).start();   // every 10 seconds
+	procTimer.initializeMs(5000, readData).start();   // every 5 seconds
+	displayUpdateTimer.initializeMs(200, updateUI).start(); // Обновление дисплея и сканирование кнопок
 	spiffs_mount(); // Mount file system, in order to work with files
 
 	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
-	Serial.systemDebugOutput(true); // Enable debug output to serial
+	Serial.systemDebugOutput(false); // Enable debug output to serial
 
 	WifiStation.enable(true);
 	WifiStation.config(WIFI_SSID, WIFI_PWD);
