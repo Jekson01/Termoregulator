@@ -2,8 +2,6 @@
 #include <SmingCore/SmingCore.h>
 #include <AppSettings.h>
 #include <Libraries/OneWire/OneWire.h>
-
-
 #include <Libraries/DS18S20/ds18s20.h>
 
 //#include "UI.h"
@@ -69,7 +67,7 @@ DS18S20 ReadTemp;
 Timer updateTemperatureTimer;
 Timer updateUITimer;
 Timer connectionTimer;
-Timer menuTimer;
+Timer updateMenuTimer;
 
 TM1637 sysio;
 RelayRegulator regulator;
@@ -365,7 +363,7 @@ void updateUI(){
 	uint8_t key = sysio.scanKey();
 
 	if (key != 0xFF){
-		menuTimer.restart();
+		updateMenuTimer.restart();
 		if (menuItem == mNone){
 			menuCounter++;
 			if (menuCounter >= 15){
@@ -490,7 +488,7 @@ void init()
 
 	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
 	Serial.systemDebugOutput(false); // Enable debug output to serial
-	menuTimer.initializeMs(2000, updateMenu).start();
+	updateMenuTimer.initializeMs(2000, updateMenu).start();
 
 	WifiStation.enable(true);
 	WifiStation.config(WIFI_SSID, WIFI_PWD);

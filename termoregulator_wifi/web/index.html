@@ -10,7 +10,7 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script>
     $(document).ready(function() {
-        (function worker() {
+        (function update() {
             $.getJSON('ajax/temperatura', function(data) {
                 $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
 
@@ -32,55 +32,67 @@
                     $("#ssensor").text("Выключено.");
                 }
 
+
+
             });
-            setTimeout(worker, 3000);
+            setTimeout(update, 2000);
         })();
 
 
         function getparam() {
             $.getJSON('ajax/getparams', function(data) {
-                var t1 = (data.param['ton'] / 10).toFixed(1);
-                var t2 = (data.param['toff'] / 10).toFixed(1);
-                $('#ton').val(t1);
-                $('#toff').val(t2);
+                var t1 = (data.param['tup'] / 10).toFixed(1);
+                var t2 = (data.param['tdown'] / 10).toFixed(1);
+                $('#tup').val(t1);
+                $('#tdown').val(t2);
             });
         };
 
 
         $("#save-btn").click(function() {
-            var t1 = ($('#ton').val() * 10).toFixed(0);
-            var t2 = ($('#toff').val() * 10).toFixed(0);
-            $.getJSON('ajax/setparams', { ton: t1, toff: t2 }, function(data) {
+            var t1 = ($('#tup').val() * 10).toFixed(0);
+            var t2 = ($('#tdown').val() * 10).toFixed(0);
+            $.getJSON('ajax/setparams', { tup: t1, tdown: t2 }, function(data) {
 
             });
         });
+        /*function setparam(){
+          var t1 = 30;//intParse($('#tup').val() * 10);
+          var t2 = 20;//intParse($('#tdown').val() * 10);
+          $.getJSON('ajax/setparams', {tup: t1;tdown:t2} ,function(data){
+            getparam();
+          });
+        };*/
 
         getparam();
 
-        $("#ton-sub").click(function() {
-            var v = $('#ton').val() * 10;
+        $("#tup-sub").click(function() {
+            var v = $('#tup').val() * 10;
             v = ((v - 1) / 10).toFixed(1);
-            $('#ton').val(v);
+            $('#tup').val(v);
         });
 
-        $("#ton-add").click(function() {
-            var v = $('#ton').val() * 10;
+        $("#tup-add").click(function() {
+            var v = $('#tup').val() * 10;
             v = ((v + 1) / 10).toFixed(1);
-            $('#ton').val(v);
+            $('#tup').val(v);
         });
 
-        $("#toff-sub").click(function() {
-            var v = $('#toff').val() * 10;
+        $("#tdown-sub").click(function() {
+            var v = $('#tdown').val() * 10;
             v = ((v - 1) / 10).toFixed(1);
-            $('#toff').val(v);
+            $('#tdown').val(v);
         });
 
-        $("#toff-add").click(function() {
-            var v = $('#toff').val() * 10;
+        $("#tdown-add").click(function() {
+            var v = $('#tdown').val() * 10;
             v = ((v + 1) / 10).toFixed(1);
-            $('#toff').val(v);
+            $('#tdown').val(v);
         });
 
+        /* $("#save-btn").click(function() {
+           getparam();
+         });*/
         var now = new Date();
         $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
     });
@@ -90,6 +102,7 @@
 <body>
     <div class="header">
         <a href="index.html">Главная</a>/
+        <a href="trsettings.html">Настройки терморегулятора</a>/
         <a href="wifisettings.html">Настройки WiFi</a>
     </div>
     <div class="content">
@@ -106,17 +119,17 @@
                 <tr>
                     <td>Температура выключения</td>
                     <td>
-                        <button id="ton-sub" class="opbutton">-</button>
-                        <input id="ton" type="text">
-                        <button id="ton-add" class="opbutton">+</button>
+                        <button id="tup-sub" class="opbutton">-</button>
+                        <input id="tup" type="text">
+                        <button id="tup-add" class="opbutton">+</button>
                     </td>
                 </tr>
                 <tr>
                     <td>Температура включения</td>
                     <td>
-                        <button id="toff-sub" class="opbutton">-</button>
-                        <input id="toff" type="text">
-                        <button id="toff-add" class="opbutton">+</button>
+                        <button id="tdown-sub" class="opbutton">-</button>
+                        <input id="tdown" type="text">
+                        <button id="tdown-add" class="opbutton">+</button>
                     </td>
                 </tr>
                 <tr>
