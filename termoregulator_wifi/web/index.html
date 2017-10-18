@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Терморегулятор</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script>
+    $(document).ready(function() {
+        (function worker() {
+            $.getJSON('ajax/temperatura', function(data) {
+                $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
+
+                var mode = data.sensor['mode'];
+
+
+                if (mode) {
+                    $("#mode").text("Режим нагрева.");
+                } else {
+                    $("#mode").text("Режим охлаждения.");
+                }
+
+                var state = data.sensor['state'];
+                if (state) {
+                    $("#ssensor").css('color', 'red');
+                    $("#ssensor").text("Включено.");
+                } else {
+                    $("#ssensor").css('color', 'blue');
+                    $("#ssensor").text("Выключено.");
+                }
+
+            });
+            setTimeout(worker, 3000);
+        })();
+
+
+        function getparam() {
+            $.getJSON('ajax/getparams', function(data) {
+                var t1 = (data.param['ton'] / 10).toFixed(1);
+                var t2 = (data.param['toff'] / 10).toFixed(1);
+                $('#ton').val(t1);
+                $('#toff').val(t2);
+            });
+        };
+
+
+        $("#save-btn").click(function() {
+            var t1 = ($('#ton').val() * 10).toFixed(0);
+            var t2 = ($('#toff').val() * 10).toFixed(0);
+            $.getJSON('ajax/setparams', { ton: t1, toff: t2 }, function(data) {
+
+            });
+        });
+
+        getparam();
+
+        $("#ton-sub").click(function() {
+            var v = $('#ton').val() * 10;
+            v = ((v - 1) / 10).toFixed(1);
+            $('#ton').val(v);
+        });
+
+        $("#ton-add").click(function() {
+            var v = $('#ton').val() * 10;
+            v = ((v + 1) / 10).toFixed(1);
+            $('#ton').val(v);
+        });
+
+        $("#toff-sub").click(function() {
+            var v = $('#toff').val() * 10;
+            v = ((v - 1) / 10).toFixed(1);
+            $('#toff').val(v);
+        });
+
+        $("#toff-add").click(function() {
+            var v = $('#toff').val() * 10;
+            v = ((v + 1) / 10).toFixed(1);
+            $('#toff').val(v);
+        });
+
+        var now = new Date();
+        $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
+    });
+    </script>
+</head>
+
+<body>
+    <div class="header">
+        <a href="index.html">Главная</a>/
+        <a href="wifisettings.html">Настройки WiFi</a>
+    </div>
+    <div class="content">
+        <h1>Текущая температура</h1>
+        <p id="tsensor" class="temperatura">NaN</p>
+        <hr>
+        <h2>Состояние</h2>
+        <p id="ssensor" class="state">NaN</p>
+        <p id="mode">NaN</p>
+        <hr>
+        <div class="trsettings">
+            <h2>Параметры</h2>
+            <table align="center">
+                <tr>
+                    <td>Температура выключения</td>
+                    <td>
+                        <button id="ton-sub" class="opbutton">-</button>
+                        <input id="ton" type="text">
+                        <button id="ton-add" class="opbutton">+</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Температура включения</td>
+                    <td>
+                        <button id="toff-sub" class="opbutton">-</button>
+                        <input id="toff" type="text">
+                        <button id="toff-add" class="opbutton">+</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp</td>
+                    <td>
+                        <button id="save-btn" class="savesettings">Сохранить</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div style="margin: 50px">
+        <hr>
+    </div>
+    <div class="footer">
+        <p class="dt">none</p>
+    </div>
+</body>
+
+</html>

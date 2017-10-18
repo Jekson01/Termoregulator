@@ -8,101 +8,91 @@
     <title>Терморегулятор</title>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="jquery.js"></script>
-    <script>
-    $(document).ready(function() {
-        (function update() {
-            $.getJSON('ajax/temperatura', function(data) {
-                $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
+     <script>
 
-                var mode = data.sensor['mode'];
+$(document).ready(function() {
+    (function update() {
+        $.getJSON('ajax/temperatura', function(data) {
+            $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
 
-
-                if (mode) {
-                    $("#mode").text("Режим нагрева.");
-                } else {
-                    $("#mode").text("Режим охлаждения.");
-                }
-
-                var state = data.sensor['state'];
-                if (state) {
-                    $("#ssensor").css('color', 'red');
-                    $("#ssensor").text("Включено.");
-                } else {
-                    $("#ssensor").css('color', 'blue');
-                    $("#ssensor").text("Выключено.");
-                }
+            var mode = data.sensor['mode'];
 
 
+            if (mode) {
+                $("#mode").text("Режим нагрева.");
+            } else {
+                $("#mode").text("Режим охлаждения.");
+            }
 
-            });
-            setTimeout(update, 2000);
-        })();
+            var state = data.sensor['state'];
+            if (state) {
+                $("#ssensor").css('color', 'red');
+                $("#ssensor").text("Включено.");
+            } else {
+                $("#ssensor").css('color', 'blue');
+                $("#ssensor").text("Выключено.");
+            }
 
 
-        function getparam() {
-            $.getJSON('ajax/getparams', function(data) {
-                var t1 = (data.param['tup'] / 10).toFixed(1);
-                var t2 = (data.param['tdown'] / 10).toFixed(1);
-                $('#tup').val(t1);
-                $('#tdown').val(t2);
-            });
-        };
 
-
-        $("#save-btn").click(function() {
-            var t1 = ($('#tup').val() * 10).toFixed(0);
-            var t2 = ($('#tdown').val() * 10).toFixed(0);
-            $.getJSON('ajax/setparams', { tup: t1, tdown: t2 }, function(data) {
-
-            });
         });
-        /*function setparam(){
-          var t1 = 30;//intParse($('#tup').val() * 10);
-          var t2 = 20;//intParse($('#tdown').val() * 10);
-          $.getJSON('ajax/setparams', {tup: t1;tdown:t2} ,function(data){
-            getparam();
-          });
-        };*/
+        setTimeout(update, 5000);
+    })();
 
-        getparam();
 
-        $("#tup-sub").click(function() {
-            var v = $('#tup').val() * 10;
-            v = ((v - 1) / 10).toFixed(1);
-            $('#tup').val(v);
+    function getparam() {
+        $.getJSON('ajax/getparams', function(data) {
+            var t1 = (data.param['ton'] / 10).toFixed(1);
+            var t2 = (data.param['toff'] / 10).toFixed(1);
+            $('#ton').val(t1);
+            $('#toff').val(t2);
         });
+    };
 
-        $("#tup-add").click(function() {
-            var v = $('#tup').val() * 10;
-            v = ((v + 1) / 10).toFixed(1);
-            $('#tup').val(v);
+
+    $("#save-btn").click(function() {
+        var t1 = ($('#ton').val() * 10).toFixed(0);
+        var t2 = ($('#toff').val() * 10).toFixed(0);
+        $.getJSON('ajax/setparams', { ton: t1, toff: t2 }, function(data) {
+
         });
-
-        $("#tdown-sub").click(function() {
-            var v = $('#tdown').val() * 10;
-            v = ((v - 1) / 10).toFixed(1);
-            $('#tdown').val(v);
-        });
-
-        $("#tdown-add").click(function() {
-            var v = $('#tdown').val() * 10;
-            v = ((v + 1) / 10).toFixed(1);
-            $('#tdown').val(v);
-        });
-
-        /* $("#save-btn").click(function() {
-           getparam();
-         });*/
-        var now = new Date();
-        $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
     });
-    </script>
+
+    getparam();
+
+    $("#ton-sub").click(function() {
+        var v = $('#ton').val() * 10;
+        v = ((v - 1) / 10).toFixed(1);
+        $('#ton').val(v);
+    });
+
+    $("#ton-add").click(function() {
+        var v = $('#ton').val() * 10;
+        v = ((v + 1) / 10).toFixed(1);
+        $('#ton').val(v);
+    });
+
+    $("#toff-sub").click(function() {
+        var v = $('#toff').val() * 10;
+        v = ((v - 1) / 10).toFixed(1);
+        $('#toff').val(v);
+    });
+
+    $("#toff-add").click(function() {
+        var v = $('#toff').val() * 10;
+        v = ((v + 1) / 10).toFixed(1);
+        $('#toff').val(v);
+    });
+
+    var now = new Date();
+    $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
+});
+</script>
 </head>
 
 <body>
     <div class="header">
         <a href="index.html">Главная</a>/
-        <a href="trsettings.html">Настройки терморегулятора</a>/
         <a href="wifisettings.html">Настройки WiFi</a>
     </div>
     <div class="content">
@@ -119,17 +109,17 @@
                 <tr>
                     <td>Температура выключения</td>
                     <td>
-                        <button id="tup-sub" class="opbutton">-</button>
-                        <input id="tup" type="text">
-                        <button id="tup-add" class="opbutton">+</button>
+                        <button id="ton-sub" class="opbutton">-</button>
+                        <input id="ton" type="text">
+                        <button id="ton-add" class="opbutton">+</button>
                     </td>
                 </tr>
                 <tr>
                     <td>Температура включения</td>
                     <td>
-                        <button id="tdown-sub" class="opbutton">-</button>
-                        <input id="tdown" type="text">
-                        <button id="tdown-add" class="opbutton">+</button>
+                        <button id="toff-sub" class="opbutton">-</button>
+                        <input id="toff" type="text">
+                        <button id="toff-add" class="opbutton">+</button>
                     </td>
                 </tr>
                 <tr>

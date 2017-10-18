@@ -1,97 +1,142 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
+
+<head>
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
+    <title>Терморегулятор</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="jquery.js"></script>
+     <script>
 
-    <title>hi</title>
+$(document).ready(function() {
+    (function update() {
+        $.getJSON('ajax/temperatura', function(data) {
+            $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
 
-    <!-- Bootstrap core CSS -->
-    <link href="bootstrap.css" rel="stylesheet">
-  <script src="jquery.js"></script>
-  
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
+            var mode = data.sensor['mode'];
 
-  <script>
-  $( document ).ready(function() {
-  
-    (function worker() {
-      $.getJSON('ajax/temperatura', function(data){
-        var items = [];
-        $(".my-new-list").empty();
-        $.each(data, function(key, val){
-          items.push("<li id='" + key + "'>"+ "<div id='sensor' class='well well-lg' style='font-size: 50pt'>" + val.toFixed(1) + "</div></li>");
-          //$('#sensor' + key).text(val.toFixed(1));
+
+            if (mode) {
+                $("#mode").text("Режим нагрева.");
+            } else {
+                $("#mode").text("Режим охлаждения.");
+            }
+
+            var state = data.sensor['state'];
+            if (state) {
+                $("#ssensor").css('color', 'red');
+                $("#ssensor").text("Включено.");
+            } else {
+                $("#ssensor").css('color', 'blue');
+                $("#ssensor").text("Выключено.");
+            }
+
+
+
         });
-          $( "<ul/>", {
-            "class": "my-new-list",
-            html: items.join( "" )
-          }).appendTo( "body" );
-
-      });
-      setTimeout(worker, 5000);
-
+        setTimeout(update, 5000);
     })();
-    
-  });
-  </script>
-  <body>
 
-    <div class="container">
-      <div class="header">
-        <nav>
-          <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active"><a href="#">Home</a></li>
-            <li role="presentation"><a href="#">About</a></li>
-            <li role="presentation"><a href="#">Contact</a></li>
-          </ul>
-        </nav>
-        <h3 class="text-muted">Base on ESP8266</h3>
-      </div>
 
-      <!-- <div class="jumbotron">
-        <h1>Терморегулятор</h1>
-      </div> -->
+    function getparam() {
+        $.getJSON('ajax/getparams', function(data) {
+            var t1 = (data.param['ton'] / 10).toFixed(1);
+            var t2 = (data.param['toff'] / 10).toFixed(1);
+            $('#ton').val(t1);
+            $('#toff').val(t2);
+        });
+    };
 
-      <div class="row marketing"  style="text-align: center;">
-                
-        <!-- <div class="col-lg-6">
-            <h1>Датчик 1</h1>
-               <div id="sensor0" class="well well-lg" style="font-size: 50pt">N/A</div>
+
+    $("#save-btn").click(function() {
+        var t1 = ($('#ton').val() * 10).toFixed(0);
+        var t2 = ($('#toff').val() * 10).toFixed(0);
+        $.getJSON('ajax/setparams', { ton: t1, toff: t2 }, function(data) {
+
+        });
+    });
+
+    getparam();
+
+    $("#ton-sub").click(function() {
+        var v = $('#ton').val() * 10;
+        v = ((v - 1) / 10).toFixed(1);
+        $('#ton').val(v);
+    });
+
+    $("#ton-add").click(function() {
+        var v = $('#ton').val() * 10;
+        v = ((v + 1) / 10).toFixed(1);
+        $('#ton').val(v);
+    });
+
+    $("#toff-sub").click(function() {
+        var v = $('#toff').val() * 10;
+        v = ((v - 1) / 10).toFixed(1);
+        $('#toff').val(v);
+    });
+
+    $("#toff-add").click(function() {
+        var v = $('#toff').val() * 10;
+        v = ((v + 1) / 10).toFixed(1);
+        $('#toff').val(v);
+    });
+
+    var now = new Date();
+    $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
+});
+</script>
+</head>
+
+<body>
+    <div class="header">
+        <a href="index.html">Главная</a>/
+        <a href="wifisettings.html">Настройки WiFi</a>
+    </div>
+    <div class="content">
+        <h1>Текущая температура</h1>
+        <p id="tsensor" class="temperatura">NaN</p>
+        <hr>
+        <h2>Состояние</h2>
+        <p id="ssensor" class="state">NaN</p>
+        <p id="mode">NaN</p>
+        <hr>
+        <div class="trsettings">
+            <h2>Параметры</h2>
+            <table align="center">
+                <tr>
+                    <td>Температура выключения</td>
+                    <td>
+                        <button id="ton-sub" class="opbutton">-</button>
+                        <input id="ton" type="text">
+                        <button id="ton-add" class="opbutton">+</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Температура включения</td>
+                    <td>
+                        <button id="toff-sub" class="opbutton">-</button>
+                        <input id="toff" type="text">
+                        <button id="toff-add" class="opbutton">+</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp</td>
+                    <td>
+                        <button id="save-btn" class="savesettings">Сохранить</button>
+                    </td>
+                </tr>
+            </table>
         </div>
+    </div>
+    <div style="margin: 50px">
+        <hr>
+    </div>
+    <div class="footer">
+        <p class="dt">none</p>
+    </div>
+</body>
 
-        <div class="col-lg-6">
-            <h1>Датчик 2</h1>
-               <div id="sensor1" class="well well-lg" style="font-size: 50pt">N/A</div>
-        </div>
-
-        <div class="col-lg-6">
-            <h1>Датчик 3</h1>
-               <div id="sensor2" class="well well-lg" style="font-size: 50pt">N/A</div>
-        </div>
-
-        <div class="col-lg-6">
-            <h1>Датчик 4</h1>
-               <div id="sensor3" class="well well-lg" style="font-size: 50pt">N/A</div>
-        </div> -->
-
-    
-      </div>
-    
-      <footer class="footer">
-        <p align="right">&copy; 2017</p>
-      </footer>
-
-    </div> <!-- /container -->
-  </body>
 </html>
