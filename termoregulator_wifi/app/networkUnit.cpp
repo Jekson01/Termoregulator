@@ -25,9 +25,10 @@ void NetworkUnit::start() {
 	// Включение wifi станции и отключение точки доступа
 	WifiStation.enable(true);
 	WifiStation.config(WIFI_SSID, WIFI_PWD);
-	WifiAccessPoint.enable(false);
 
-	//System.onReady(isSystemReady);
+	WifiAccessPoint.enable(true);
+	WifiAccessPoint.config("ESP", "", AUTH_OPEN);
+	System.onReady(isSystemReady);
 
 	WifiEvents.onStationGotIP(onIPadress);
 	WifiEvents.onStationConnect(isConnect);
@@ -91,6 +92,7 @@ void NetworkUnit::onAjaxGetTemperatura(HttpRequest& request,
 	sensor["temperatura"] = LocalUnit::getTemperature();
 	sensor["state"] = (bool)LocalUnit::regulator.isRelOut();
 	sensor["mode"] = (bool)LocalUnit::regulator.isHeating();
+	sensor["rssi"] = WifiStation.getRssi();
 	response.sendDataStream(stream, MIME_JSON);
 }
 
@@ -126,4 +128,14 @@ void NetworkUnit::onAjaxGetTRParam(HttpRequest& request,
 	param["toff"] = LocalUnit::regulator.getTOff();
 	response.sendDataStream(stream, MIME_JSON);
 	Serial.println(__FUNCTION__);
+}
+
+void NetworkUnit::getWifiSettings(HttpRequest& request,
+		HttpResponse& response) {
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+	JsonObject& param = json.createNestedObject("wifiparam");
+	param["ssid"] = WifiStation.getSSID();
+
+	response.sendDataStream(stream, MIME_JSON);
 }

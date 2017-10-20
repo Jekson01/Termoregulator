@@ -2,151 +2,130 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Терморегулятор</title>
-    <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="jquery.js"></script>
-    <script>
-    $(document).ready(function() {
-        (function update() {
-            $.getJSON('ajax/temperatura', function(data) {
-                $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
-
-                var mode = data.sensor['mode'];
-
-
-                if (mode) {
-                    $("#mode").text("Режим нагрева.");
-                } else {
-                    $("#mode").text("Режим охлаждения.");
-                }
-
-                var state = data.sensor['state'];
-                if (state) {
-                    $("#ssensor").css('color', 'red');
-                    $("#ssensor").text("Включено.");
-                } else {
-                    $("#ssensor").css('color', 'blue');
-                    $("#ssensor").text("Выключено.");
-                }
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Терморегулятор</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="bootstrap.css" rel="stylesheet">
+  <script src="jquery.js"></script>
+  <script>
+  $(document).ready(function() {
+    (function update() {
+      $.getJSON('ajax/temperatura', function(data) {
+        $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
+        $('.wifi-level').text("Wifi - " + data.sensor['rssi'] + "dBm");
+        var mode = data.sensor['mode'];
 
 
+        if (mode) {
+          $("#mode").text("Режим нагрева.");
+        } else {
+          $("#mode").text("Режим охлаждения.");
+        }
 
-            });
-            setTimeout(update, 2000);
-        })();
+        var state = data.sensor['state'];
+        if (state) {
+          $("#ssensor").css('color', 'red');
+          $("#ssensor").text("Включено.");
+        } else {
+          $("#ssensor").css('color', 'blue');
+          $("#ssensor").text("Выключено.");
+        }
 
 
-        function getparam() {
-            $.getJSON('ajax/getparams', function(data) {
-                var t1 = (data.param['tup'] / 10).toFixed(1);
-                var t2 = (data.param['tdown'] / 10).toFixed(1);
-                $('#tup').val(t1);
-                $('#tdown').val(t2);
-            });
-        };
+
+      })
+      setTimeout(update, 2000);
+    })()
+
+    var tOn;
+    var tOff;
+
+    function printValues() {
+      $("#ton").val((tOn / 10).toFixed(1));
+      $("#toff").val((tOff / 10).toFixed(1));
+    }
+
+    function load() {
+      $.getJSON("ajax/getparams", function(data) {
+        tOn = data.param["ton"];
+        tOff = data.param["toff"];
+        printValues();
+      })
+    }
+
+    load();
+
+    $("#save-btn").click(function() {
+
+      tOn = $("#ton").val() * 10;
+      tOff = $("#toff").val() * 10;
+
+      $.getJSON('ajax/setparams', { ton: tOn, toff: tOff }, function(data) {
+        load();
+      })
+    })
+
+    $("#update-btn").click(function(){
+      load();
+    })
 
 
-        $("#save-btn").click(function() {
-            var t1 = ($('#tup').val() * 10).toFixed(0);
-            var t2 = ($('#tdown').val() * 10).toFixed(0);
-            $.getJSON('ajax/setparams', { tup: t1, tdown: t2 }, function(data) {
-
-            });
-        });
-        /*function setparam(){
-          var t1 = 30;//intParse($('#tup').val() * 10);
-          var t2 = 20;//intParse($('#tdown').val() * 10);
-          $.getJSON('ajax/setparams', {tup: t1;tdown:t2} ,function(data){
-            getparam();
-          });
-        };*/
-
-        getparam();
-
-        $("#tup-sub").click(function() {
-            var v = $('#tup').val() * 10;
-            v = ((v - 1) / 10).toFixed(1);
-            $('#tup').val(v);
-        });
-
-        $("#tup-add").click(function() {
-            var v = $('#tup').val() * 10;
-            v = ((v + 1) / 10).toFixed(1);
-            $('#tup').val(v);
-        });
-
-        $("#tdown-sub").click(function() {
-            var v = $('#tdown').val() * 10;
-            v = ((v - 1) / 10).toFixed(1);
-            $('#tdown').val(v);
-        });
-
-        $("#tdown-add").click(function() {
-            var v = $('#tdown').val() * 10;
-            v = ((v + 1) / 10).toFixed(1);
-            $('#tdown').val(v);
-        });
-
-        /* $("#save-btn").click(function() {
-           getparam();
-         });*/
-        var now = new Date();
-        $(".dt").text(now.getDate() + ' / ' + now.getMonth() + ' / ' + now.getFullYear());
-    });
-    </script>
+  })
+  </script>
 </head>
 
 <body>
-    <div class="header">
-        <a href="index.html">Главная</a>/
-        <a href="trsettings.html">Настройки терморегулятора</a>/
-        <a href="wifisettings.html">Настройки WiFi</a>
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav navbar-left">
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="wifisettings.html">Настройка Wifi</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a class=" wifi-level" href="#">rssi</a></li>
+      </ul>
     </div>
-    <div class="content">
-        <h1>Текущая температура</h1>
-        <p id="tsensor" class="temperatura">NaN</p>
-        <hr>
-        <h2>Состояние</h2>
-        <p id="ssensor" class="state">NaN</p>
-        <p id="mode">NaN</p>
-        <hr>
-        <div class="trsettings">
-            <h2>Параметры</h2>
-            <table align="center">
-                <tr>
-                    <td>Температура выключения</td>
-                    <td>
-                        <button id="tup-sub" class="opbutton">-</button>
-                        <input id="tup" type="text">
-                        <button id="tup-add" class="opbutton">+</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Температура включения</td>
-                    <td>
-                        <button id="tdown-sub" class="opbutton">-</button>
-                        <input id="tdown" type="text">
-                        <button id="tdown-add" class="opbutton">+</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>&nbsp</td>
-                    <td>
-                        <button id="save-btn" class="savesettings">Сохранить</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
+  </nav>
+  <div class="row ">
+    <div class="col-lg-7 panel panel-primary text-center container">
+      <div class="panel-heading ">
+        <h3 class="panel-title">Текущая температура</h3>
+      </div>
+      <div class="panel-body">
+        <p id="tsensor" class="temperatura h1 text-info">NaN</p>
+        <p id="ssensor" class="state h3 text-info">NaN</p>
+        <p id="mode" class="h3 text-info">NaN</p>
+      </div>
     </div>
-    <div style="margin: 50px">
-        <hr>
+
+    <div class="col-lg-5">
+      <div class="form-horizontal container">
+        <fieldset>
+          <legend>Параметры</legend>
+          <div class="form-group">
+            <label for="toff" class="col-lg-3 control-label">Температура включения</label>
+            <div class="col-lg-2">
+              <input class="form-control" id="toff" placeholder="0.0" type="text">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ton" class="col-lg-3 control-label">Температура выключения</label>
+            <div class="col-lg-2">
+              <input class="form-control" id="ton" placeholder="0.0" type="text">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-lg-5">
+              <button type="button" id="update-btn" class="btn btn-default">Обновить</button>
+              <button type="button" id="save-btn" class="btn btn-primary">Сохранить</button>
+            </div>
+          </div>
+        </fieldset>
+      </div>
     </div>
-    <div class="footer">
-        <p class="dt">none</p>
-    </div>
+  </div>
 </body>
 
 </html>

@@ -94,34 +94,34 @@ void LocalUnit::updateUI(){
 				addVal = 1;
 			}
 
-			if (menuItem == mLeftEdit) {
+			if (menuItem == mRightEdit) {
 				int16_t t = regulator.getTOn();
 				t+=addVal;
-				regulator.setTOn(t);
+				regulator.setOnOffTemperature(t, regulator.getTOff());
 			}
-			if (menuItem == mRightEdit) {
+			if (menuItem == mLeftEdit) {
 				int16_t t = regulator.getTOff();
 				t+=addVal;
-				regulator.setTOff(t);
+				regulator.setOnOffTemperature(regulator.getTOn(), t);
 			}
 		}
 
 		switch (menuItem) {
-			case mLeft:{
-				sysio.print(111);
+			case mRight:{
+				sysio.print(888);
 				break;
 			}
 
-			case mLeftEdit:{
+			case mRightEdit:{
 				sysio.print(regulator.getTOn());
 				break;
 			}
 
-			case mRight:{
-				sysio.print(222);
+			case mLeft:{
+				sysio.print(777);
 				break;
 			}
-			case mRightEdit:{
+			case mLeftEdit:{
 				sysio.print(regulator.getTOff());
 				break;
 			}

@@ -33,6 +33,7 @@ namespace NetworkUnit {
 	void onAjaxGetTemperatura(HttpRequest &request, HttpResponse &response);
 	void onAjaxSetTRParams(HttpRequest &request, HttpResponse &response);
 	void onAjaxGetTRParam(HttpRequest &request, HttpResponse &response);
+	void getWifiSettings(HttpRequest &request, HttpResponse &response);
 
 }  // namespace NetUnit
 

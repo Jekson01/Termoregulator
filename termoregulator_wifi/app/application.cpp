@@ -3,10 +3,9 @@
 #include "localUnit.h"
 #include "networkUnit.h"
 
-
-
 void init()
 {
+
 	// Монтирование файловой системы
 	spiffs_mount();
 
