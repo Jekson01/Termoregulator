@@ -48,3 +48,33 @@
 .content .opbutton{
 	width: 40px;
 }
+
+.wifi{
+    background: url(wifi-sprites.png) no-repeat;
+    float: left;
+    margin-right: 10px;
+}
+
+.wifi-4{
+    background-position: 0 0;
+    width: 64px;
+    height: 64px;
+}
+
+.wifi-3{
+    background-position: -64px 0;
+    width: 64px;
+    height: 64px;
+}
+
+.wifi-2{
+    background-position: -128px 0;
+    width: 64px;
+    height: 64px;
+}
+
+.wifi-1{
+    background-position: -192px 0;
+    width: 64px;
+    height: 64px;
+}

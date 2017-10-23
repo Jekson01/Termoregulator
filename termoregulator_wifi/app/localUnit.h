@@ -12,6 +12,7 @@
 #include <Libraries/DS18S20/ds18s20.h>
 #include "lib/TM1637.h"
 #include "lib/RelayRegulator.h"
+#include "tr_settings.h"
 
 #define KEY1	232
 #define KEY2	233
@@ -25,6 +26,7 @@ namespace LocalUnit {
 	void updateSensor();
 	void updateMenu();
 	void updateUI();
+	void saveSettings();
 
 }  // namespace LU
 

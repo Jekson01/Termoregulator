@@ -3,8 +3,14 @@
 #include "localUnit.h"
 #include "networkUnit.h"
 
+
+
+
 void init()
 {
+	// need to debug
+	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
+	Serial.systemDebugOutput(false); // Enable debug output to serial
 
 	// Монтирование файловой системы
 	spiffs_mount();

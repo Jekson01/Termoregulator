@@ -14,17 +14,26 @@ namespace NetworkUnit {
 	FTPServer ftp;
 	BssList networks;
 	String network, password;
+	Timer connectionTimer;
 }
 
 void NetworkUnit::start() {
 
-	// need to debug
-	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
-	Serial.systemDebugOutput(false); // Enable debug output to serial
+	if (!settings.exist()){
+		settings.ssid = WIFI_SSID;
+		settings.password = WIFI_PWD;
+		settings.save();
+	}
 
-	// Включение wifi станции и отключение точки доступа
+	settings.load();
+	Serial.println(settings.ssid);
+	Serial.println(settings.password);
+
+	// Включение wifi станции
 	WifiStation.enable(true);
-	WifiStation.config(WIFI_SSID, WIFI_PWD);
+	WifiStation.config(settings.ssid, settings.password);
+
+	WifiStation.startScan(networkScanCompleted);
 
 	WifiAccessPoint.enable(true);
 	WifiAccessPoint.config("ESP", "", AUTH_OPEN);
@@ -33,6 +42,7 @@ void NetworkUnit::start() {
 	WifiEvents.onStationGotIP(onIPadress);
 	WifiEvents.onStationConnect(isConnect);
 	WifiEvents.onStationDisconnect(isDisconnect);
+	WifiEvents.onAccessPointConnect(isAPConnect);
 }
 
 void NetworkUnit::onIndex(HttpRequest& request, HttpResponse& response) {
@@ -77,6 +87,7 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/temperatura", onAjaxGetTemperatura);
 	server.addPath("/ajax/setparams", onAjaxSetTRParams);
 	server.addPath("/ajax/getparams", onAjaxGetTRParam);
+	server.addPath("/ajax/get-networks", onAjaxGetNetworks);
 	server.setDefaultHandler(onFile);
 
 	Serial.println("\r\n=== WEB SERVER STARTED ===");
@@ -92,7 +103,6 @@ void NetworkUnit::onAjaxGetTemperatura(HttpRequest& request,
 	sensor["temperatura"] = LocalUnit::getTemperature();
 	sensor["state"] = (bool)LocalUnit::regulator.isRelOut();
 	sensor["mode"] = (bool)LocalUnit::regulator.isHeating();
-	sensor["rssi"] = WifiStation.getRssi();
 	response.sendDataStream(stream, MIME_JSON);
 }
 
@@ -101,6 +111,7 @@ void NetworkUnit::onAjaxSetTRParams(HttpRequest& request,
 	int tOn = request.getQueryParameter("ton").toInt();
 	int tOff = request.getQueryParameter("toff").toInt();
 	LocalUnit::regulator.setOnOffTemperature(tOn, tOff);
+	LocalUnit::saveSettings();
 }
 
 void NetworkUnit::isConnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason) {
@@ -130,6 +141,66 @@ void NetworkUnit::onAjaxGetTRParam(HttpRequest& request,
 	Serial.println(__FUNCTION__);
 }
 
+void NetworkUnit::onAjaxConnect(HttpRequest& request, HttpResponse& response) {
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+
+	String curNet = request.getPostParameter("network");
+	String curPass = request.getPostParameter("password");
+
+	bool updating = curNet.length() > 0
+			&& (WifiStation.getSSID() != curNet
+					|| WifiStation.getPassword() != curPass);
+	bool connectingNow = WifiStation.getConnectionStatus() == eSCS_Connecting
+			|| network.length() > 0;
+
+	if (updating && connectingNow) {
+		debugf("wrong action: %s %s, (updating: %d, connectingNow: %d)", network.c_str(), password.c_str(), updating, connectingNow);
+		json["status"] = (bool) false;
+		json["connected"] = (bool) false;
+	} else {
+		json["status"] = (bool) true;
+		if (updating) {
+			network = curNet;
+			password = curPass;
+			debugf("CONNECT TO: %s %s", network.c_str(), password.c_str());
+			json["connected"] = false;
+			connectionTimer.initializeMs(1200, makeConnection).startOnce();
+		} else {
+			json["connected"] = WifiStation.isConnected();
+			debugf("Network already selected. Current status: %s", WifiStation.getConnectionStatusName());
+		}
+	}
+
+	if (!updating && !connectingNow && WifiStation.isConnectionFailed())
+		json["error"] = WifiStation.getConnectionStatusName();
+
+	response.setAllowCrossDomainOrigin("*");
+	response.sendDataStream(stream, MIME_JSON);
+}
+
+void NetworkUnit::makeConnection() {
+	WifiStation.enable(true);
+	WifiStation.config(network, password);
+
+	settings.ssid = network;
+	settings.password = password;
+	settings.save();
+
+	network = ""; // task completed
+}
+
+void NetworkUnit::networkScanCompleted(bool succeeded, BssList list) {
+	networks.clear();
+	if (succeeded) {
+		for (int i = 0; i < list.count(); i++)
+			if (!list[i].hidden && list[i].ssid.length() > 0)
+				networks.add(list[i]);
+	}
+	networks.sort(
+			[](const BssInfo& a, const BssInfo& b) {return b.rssi - a.rssi;});
+}
+
 void NetworkUnit::getWifiSettings(HttpRequest& request,
 		HttpResponse& response) {
 	JsonObjectStream* stream = new JsonObjectStream();
@@ -138,4 +209,43 @@ void NetworkUnit::getWifiSettings(HttpRequest& request,
 	param["ssid"] = WifiStation.getSSID();
 
 	response.sendDataStream(stream, MIME_JSON);
+}
+
+void NetworkUnit::onAjaxGetNetworks(HttpRequest& request,
+		HttpResponse& response) {
+	updateNetworkList();
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+
+	json["status"] = (bool) true;
+
+	bool connected = WifiStation.isConnected();
+	json["connected"] = connected;
+	if (connected) {
+		// Copy full string to JSON buffer memory
+		json["network"] = WifiStation.getSSID();
+	}
+
+	JsonArray& netlist = json.createNestedArray("available");
+	for (int i = 0; i < networks.count(); i++) {
+		if (networks[i].hidden)
+			continue;
+		JsonObject &item = netlist.createNestedObject();
+		item["id"] = (int) networks[i].getHashId();
+		// Copy full string to JSON buffer memory
+		item["title"] = networks[i].ssid;
+		item["signal"] = networks[i].rssi;
+		item["encryption"] = networks[i].getAuthorizationMethodName();
+	}
+
+	response.setAllowCrossDomainOrigin("*");
+	response.sendDataStream(stream, MIME_JSON);
+}
+
+void NetworkUnit::isAPConnect(uint8_t[6], uint8_t) {
+	Serial.println(__FUNCTION__);
+}
+
+void NetworkUnit::updateNetworkList() {
+	WifiStation.startScan(networkScanCompleted);
 }

@@ -11,6 +11,7 @@
 #include <user_config.h>
 #include <SmingCore/SmingCore.h>
 #include "localUnit.h"
+#include "settings.h"
 
 #define WIFI_SSID "ASUS-8B3C"
 #define WIFI_PWD "12345678"
@@ -30,11 +31,17 @@ namespace NetworkUnit {
 	void isDisconnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
 	void isSystemReady();
 
+	void isAPConnect(uint8_t[6], uint8_t);
+
 	void onAjaxGetTemperatura(HttpRequest &request, HttpResponse &response);
 	void onAjaxSetTRParams(HttpRequest &request, HttpResponse &response);
 	void onAjaxGetTRParam(HttpRequest &request, HttpResponse &response);
+	void onAjaxGetNetworks(HttpRequest &request, HttpResponse &response);
+	void onAjaxConnect(HttpRequest &request, HttpResponse &response);
+	void makeConnection();
+	void networkScanCompleted(bool succeeded, BssList list);
 	void getWifiSettings(HttpRequest &request, HttpResponse &response);
-
+	void updateNetworkList();
 }  // namespace NetUnit
 
 #endif /* APP_NETWORKUNIT_H_ */

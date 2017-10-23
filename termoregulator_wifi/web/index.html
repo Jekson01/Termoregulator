@@ -14,7 +14,6 @@
     (function update() {
       $.getJSON('ajax/temperatura', function(data) {
         $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
-        $('.wifi-level').text("Wifi - " + data.sensor['rssi'] + "dBm");
         var mode = data.sensor['mode'];
 
 
@@ -82,9 +81,6 @@
       <ul class="nav navbar-nav navbar-left">
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a class=" wifi-level" href="#">rssi</a></li>
       </ul>
     </div>
   </nav>
