@@ -19,8 +19,12 @@
 #define KEY3	237
 #define KEY4	238
 
+#define ARR_LENGTH	120
+
 namespace LocalUnit {
 	extern RelayRegulator regulator;
+	extern int16_t arr[ARR_LENGTH];
+	extern uint16_t arrPos;
 	void start();
 	int16_t getTemperature();
 	void updateSensor();

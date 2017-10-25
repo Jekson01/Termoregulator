@@ -15,8 +15,8 @@
       $.getJSON('ajax/temperatura', function(data) {
         $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
         var mode = data.sensor['mode'];
-        
-        
+
+
         if (mode) {
           $("#mode").text("Режим охлаждения.");
         } else {
@@ -56,15 +56,16 @@
 
     function checkLogin() {
       $.getJSON("ajax/getlogin", function(data) {
-        if(data.state["islogin"]){
+        $("#sensor-title").text(data.state['title']);
+        if (data.state["islogin"]) {
           $("#save-btn").removeClass("disabled");
           $("#ton").removeAttr('disabled');
           $("#toff").removeAttr('disabled');
           $("#loginbox").hide();
           $("#login-btn").text("Выйти");
-        }else{
-          $("#ton").attr('disabled','disabled');
-          $("#toff").attr('disabled','disabled');
+        } else {
+          $("#ton").attr('disabled', 'disabled');
+          $("#toff").attr('disabled', 'disabled');
           $("#save-btn").addClass("disabled");
           $("#loginbox").show();
           $("#login-btn").text("Войти");
@@ -87,40 +88,47 @@
     $("#update-btn").click(function() {
       load();
     })
-    
-    $(".tedit").change(function(){
+
+    $(".tedit").change(function() {
       $("#save-btn").addClass("btn-primary");
       var errorInput = false;
-      if ($("#ton").val()===""){
+      if ($("#ton").val() === "") {
         errorInput = true;
       }
 
-      if ($("#toff").val()===""){
+      if ($("#toff").val() === "") {
         errorInput = true;
       }
 
-      if ($("#ton").val() > 125 || $("#ton").val() < -55){
+      if ($("#ton").val() > 125 || $("#ton").val() < -55) {
         errorInput = true;
       }
 
-      if ($("#toff").val() > 125 || $("#toff").val() < -55){
+      if ($("#toff").val() > 125 || $("#toff").val() < -55) {
         errorInput = true;
       }
 
-      if (errorInput){
+      if (errorInput) {
         load();
       }
 
     })
 
-    $("#login-btn").on('click', function(){
+    $("#login-btn").on('click', function() {
       var userPass = $("#userpass").val();
       $("#userpass").val("")
-      $.getJSON('ajax/login', { password: userPass}, function(data) {
+      $.getJSON('ajax/login', { password: userPass }, function(data) {
         load();
       })
     })
-    
+
+    $("#showChart").on('click', function(){
+      $.getJSON('ajax/getdata', function(data) {
+        $(".len").text(data.data['len']);
+        $(".pos").text(data.data['pos']);
+      })
+    })
+
 
   })
   </script>
@@ -133,7 +141,7 @@
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
       </ul>
-      <div class="navbar-form navbar-right" >
+      <div class="navbar-form navbar-right">
         <div class="form-group" id="loginbox">
           <input id="userpass" class="form-control" placeholder="Password" type="password">
         </div>
@@ -144,7 +152,7 @@
   <div class="row ">
     <div class="col-lg-7 panel panel-primary text-center container">
       <div class="panel-heading ">
-        <h3 class="panel-title">Текущая температура</h3>
+        <h3 class="panel-title" id="sensor-title">Текущая температура</h3>
       </div>
       <div class="panel-body">
         <p id="tsensor" class="temperatura h1 text-info">NaN</p>
@@ -170,17 +178,25 @@
           </div>
           <div class="form-group">
             <div class="col-lg-5">
-            <div class="navbar-right">
-              <button type="button" id="update-btn" class="btn btn-default">Прочитать уствки</button>
-              <button type="button" id="save-btn" class="btn btn-default">Сохранить</button>
-            </div>
-              
+              <div class="navbar-right">
+                <button type="button" id="update-btn" class="btn btn-default">Прочитать уствки</button>
+                <button type="button" id="save-btn" class="btn btn-default">Сохранить</button>
+              </div>
             </div>
           </div>
         </fieldset>
       </div>
     </div>
   </div>
+   <!-- 
+  <div>
+    <button type="button" id="showChart" class="btn btn-default">Загрузить график</button>
+    <div class="chart">
+      <p class="len">...</p>
+      <p class="pos">...</p>
+    </div>
+  </div>
+  -->
 </body>
 
 </html>

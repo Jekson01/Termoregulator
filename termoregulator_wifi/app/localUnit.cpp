@@ -12,7 +12,8 @@ namespace LocalUnit {
 	TM1637 sysio;
 	RelayRegulator regulator;
 	DS18S20 sensor;
-
+	int16_t arr[ARR_LENGTH] = {0};
+	uint16_t arrPos = 0;
 	// меню
 	enum menuItems {
 		mNone, mLeft, mLeftEdit, mRight, mRightEdit
@@ -37,6 +38,10 @@ void LocalUnit::updateSensor(){
 				float T = sensor.GetCelsius(0);
 				Temperatura = (int16_t)(T * 10);
 				regulator.check(Temperatura);
+				arr[arrPos] = Temperatura;
+				arrPos++;
+				if (arrPos == ARR_LENGTH)
+					arrPos = 0;
 			}
 		}
 		sensor.StartMeasure();

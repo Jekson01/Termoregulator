@@ -14,14 +14,19 @@
 
     (function checkLogin() {
       $.getJSON("ajax/getlogin", function(data) {
+
+        $("#newtitle").attr('placeholder', data.state['title']);
+
         if(data.state["islogin"]){
           $("#btnconnect").removeClass("disabled");
           $("#loginbox").hide();
           $("#login-btn").text("Выйти");
+          $("#extset").show();
         }else{
           $("#btnconnect").addClass("disabled");
           $("#loginbox").show();
           $("#login-btn").text("Войти");
+          $("#extset").hide();
         }
       })
       setTimeout(checkLogin, 2000);
@@ -114,6 +119,13 @@
       })
     })
 
+    $("#save-newparam").on('click', function(){
+      var nTitle = $("#newtitle").val();
+      var nPass = $("#newpass").val();
+      $.getJSON('ajax/savesettings', { newtitle: nTitle, newpass: nPass}, function(data) {
+      })
+    })
+
   });
   </script>
 </head>
@@ -161,6 +173,28 @@
       </div>
     </div>
   </div>
+  
+  <div class="form-horizontal" id="extset">
+    <fieldset>
+      <legend>Дополнительные параметры</legend>
+      <div class="form-group">
+        <label for="newtitle" class="col-lg-2 control-label">Название датчика</label>
+         <div class="col-lg-10">
+          <input class="form-control" id="newtitle" placeholder="текст" type="text">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="newpass" class="col-lg-2 control-label">Новый пароль</label>
+         <div class="col-lg-10">
+          <input class="form-control" id="newpass" placeholder="Новый пароль" type="password">
+        </div>
+      </div>
+      <div class="col-lg-10 col-lg-offset-2">
+        <button id="save-newparam" type="button" class="btn btn-primary">Сохранить</button>
+      </div>
+    </fieldset>
+  </div>
+
 </body>
 
 </html>

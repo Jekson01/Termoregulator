@@ -25,6 +25,7 @@ void NetworkUnit::start() {
 		settings.ssid = WIFI_SSID;
 		settings.password = WIFI_PWD;
 		settings.adminPass = ADMIN_PASS;
+		settings.sensorName = "Tемпература";
 		settings.save();
 	}
 
@@ -92,6 +93,8 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/connect", onAjaxConnect);
 	server.addPath("/ajax/login", onAjaxLogin);
 	server.addPath("/ajax/getlogin", onAjaxCheckLogin);
+	server.addPath("/ajax/getdata", onAjaxGetArrayData);
+	server.addPath("/ajax/savesettings", onAjaxSaveSettings);
 	server.setDefaultHandler(onFile);
 
 	/*Serial.println("\r\n=== WEB SERVER STARTED ===");
@@ -232,8 +235,45 @@ void NetworkUnit::onAjaxCheckLogin(HttpRequest& request,
 	JsonObject& json = stream->getRoot();
 	JsonObject& param = json.createNestedObject("state");
 	param["islogin"] = isLogin;
+	param["title"] = settings.sensorName;
+	response.sendDataStream(stream, MIME_JSON);
+}
+
+void NetworkUnit::onAjaxGetArrayData(HttpRequest& request,
+		HttpResponse& response) {
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+	JsonObject& data = json.createNestedObject("data");
+
+	data["len"] = ARR_LENGTH;
+	data["pos"] = LocalUnit::arrPos;
+
+	for (int i = 0; i < ARR_LENGTH; i++) {
+		char buff[3];
+		itoa(i, buff, 10);
+		String item = "item_";
+		item += buff;
+		data[item] = LocalUnit::arr[i];
+	}
 
 	response.sendDataStream(stream, MIME_JSON);
+}
+
+void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
+		HttpResponse& response) {
+	String newName = request.getQueryParameter("newtitle");
+	String newPass = request.getQueryParameter("newpass");
+	if (!isLogin)
+		return;
+
+	if (newPass.length() > 0){
+		settings.adminPass = newPass;
+	}
+	if (newName.length() > 0){
+		settings.sensorName = newName;
+	}
+	settings.save();
+	isLogin = false;
 }
 
 void NetworkUnit::resetLogin() {

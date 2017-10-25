@@ -17,6 +17,7 @@ struct AppSettings{
 	String ssid;
 	String password;
 	String adminPass;
+	String sensorName;
 	void load() {
 		DynamicJsonBuffer jsonBuffer;
 		if (exist()) {
@@ -29,6 +30,7 @@ struct AppSettings{
 			ssid = param["ssid"].asString();
 			password = param["pass"].asString();
 			adminPass = param["apass"].asString();
+			sensorName = param["name"].asString();
 			delete[] jsonString;
 		}
 	}
@@ -42,6 +44,7 @@ struct AppSettings{
 		param["ssid"] = ssid.c_str();
 		param["pass"] = password.c_str();
 		param["apass"] = adminPass.c_str();
+		param["name"] = sensorName.c_str();
 
 		String rootString;
 		root.printTo(rootString);

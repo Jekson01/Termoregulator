@@ -40,7 +40,8 @@ namespace NetworkUnit {
 	void onAjaxConnect(HttpRequest &request, HttpResponse &response);
 	void onAjaxLogin(HttpRequest &request, HttpResponse &response);
 	void onAjaxCheckLogin(HttpRequest &request, HttpResponse &response);
-
+	void onAjaxGetArrayData(HttpRequest &request, HttpResponse &response);
+	void onAjaxSaveSettings(HttpRequest &request, HttpResponse &response);
 	void makeConnection();
 	void networkScanCompleted(bool succeeded, BssList list);
 	void updateNetworkList();
