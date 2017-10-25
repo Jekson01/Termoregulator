@@ -15,9 +15,9 @@
 
 #define WIFI_SSID "ASUS-8B3C"
 #define WIFI_PWD "12345678"
+#define ADMIN_PASS	"admin"
 
-#define FTP_LOGIN	"user"
-#define FTP_PASS	"123"
+#define FTP_LOGIN	"admin"
 
 namespace NetworkUnit {
 
@@ -38,10 +38,14 @@ namespace NetworkUnit {
 	void onAjaxGetTRParam(HttpRequest &request, HttpResponse &response);
 	void onAjaxGetNetworks(HttpRequest &request, HttpResponse &response);
 	void onAjaxConnect(HttpRequest &request, HttpResponse &response);
+	void onAjaxLogin(HttpRequest &request, HttpResponse &response);
+
 	void makeConnection();
 	void networkScanCompleted(bool succeeded, BssList list);
 	void getWifiSettings(HttpRequest &request, HttpResponse &response);
 	void updateNetworkList();
+
+	void resetLogin();
 }  // namespace NetUnit
 
 #endif /* APP_NETWORKUNIT_H_ */

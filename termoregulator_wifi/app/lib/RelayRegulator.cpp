@@ -22,33 +22,37 @@ void RelayRegulator::unRegSwitchRelayCallback() {
 	swichRelayCallback = 0;
 }
 
-void RelayRegulator::setOnOffTemperature(int16_t _upT, int16_t _downT) {
-	if (_upT < _downT){
+void RelayRegulator::setOnOffTemperature(int16_t _ton, int16_t _toff) {
+	tOn = _ton;
+	tOff = _toff;
+	if (tOn < tOff){
 		heating = false;
-		tOn = _downT;
-		tOff = _upT;
 	} else {
 		heating = true;
-		tOn = _upT;
-		tOff = _downT;
 	}
 }
 
 bool RelayRegulator::check(int16_t temperature) {
 	/*
 	 * Нагрев:
-	 * T > tUP -> ON
-	 * T < dDown -> OFF
+	 * T < ton -> ON
+	 * T > toff -> OFF
 	 *
 	 * Охлаждение
-	 * T > tUp -> OFF
-	 * T < tUp -> ON*/
+	 * T > ton -> ON
+	 * T < toff -> OFF*/
 
-	if (temperature > tOn)
-		relOut = heating ^ true;
-
-	if (temperature < tOff)
-		relOut = heating ^ false;
+	if (heating){
+		if (temperature > tOn)
+			relOut = true;
+		if (temperature < tOff)
+			relOut = false;
+	}else{
+		if (temperature < tOn)
+			relOut = true;
+		if (temperature > tOff)
+			relOut = false;
+	}
 
 	if (swichRelayCallback){
 		swichRelayCallback(relOut);

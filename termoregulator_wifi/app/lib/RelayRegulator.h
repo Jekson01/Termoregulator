@@ -24,24 +24,13 @@ public:
 	bool check(int16_t temperature);
 
 	int16_t getTOn() const {
-		if(heating)
-			return tOn;
-		return tOff;
-	}
-
-	void setTOn(int16_t upT) {
-		this->tOn = upT;
-	}
-
-	int16_t getTOff() const {
-		if(heating)
-			return tOff;
 		return tOn;
 	}
 
-	void setTOff(int16_t downT) {
-		this->tOff = downT;
+	int16_t getTOff() const {
+		return tOff;
 	}
+
 
 	bool isRelOut() const {
 		return relOut;

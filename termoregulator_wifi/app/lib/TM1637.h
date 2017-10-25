@@ -17,6 +17,17 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
+#define S_A	10
+#define S_b	11
+#define S_C	12
+#define S_d	13
+#define S_E	14
+#define S_F	15
+#define S_t	16
+#define S_o	17
+#define S_n	18
+#define S_minus	19
+
 #define DGT_COUNT	6
 
 #define MAX_BRIGHT	8
@@ -74,6 +85,7 @@ public:
 	void printChar(uint8_t pos, uint8_t data);
 	void setPoint(uint8_t pos);
 	void print(uint16_t data);
+	void printT(int16_t data);
 };
 
 #endif /* APP_TM1637_H_ */

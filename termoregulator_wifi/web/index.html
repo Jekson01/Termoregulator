@@ -15,12 +15,12 @@
       $.getJSON('ajax/temperatura', function(data) {
         $('#tsensor').text((data.sensor['temperatura'] / 10).toFixed(1));
         var mode = data.sensor['mode'];
-
-
+        
+        
         if (mode) {
-          $("#mode").text("Режим нагрева.");
-        } else {
           $("#mode").text("Режим охлаждения.");
+        } else {
+          $("#mode").text("Режим нагрева.");
         }
 
         var state = data.sensor['state'];
@@ -32,7 +32,19 @@
           $("#ssensor").text("Выключено.");
         }
 
-
+        if(data.sensor['islogin']){
+          $("#save-btn").removeClass("disabled");
+          $("#ton").removeAttr('disabled');
+          $("#toff").removeAttr('disabled');
+          $("#loginbox").hide();
+          $("#login-btn").text("Выйти");
+        }else{
+          $("#ton").attr('disabled','disabled');
+          $("#toff").attr('disabled','disabled');
+          $("#save-btn").addClass("disabled");
+          $("#loginbox").show();
+          $("#login-btn").text("Войти");
+        }
 
       })
       setTimeout(update, 2000);
@@ -51,25 +63,58 @@
         tOn = data.param["ton"];
         tOff = data.param["toff"];
         printValues();
+        $("#save-btn").removeClass("btn-primary");
       })
     }
 
     load();
 
     $("#save-btn").click(function() {
-
       tOn = $("#ton").val() * 10;
       tOff = $("#toff").val() * 10;
-
+      $("#save-btn").removeClass("btn-primary");
       $.getJSON('ajax/setparams', { ton: tOn, toff: tOff }, function(data) {
         load();
       })
     })
 
-    $("#update-btn").click(function(){
+    $("#update-btn").click(function() {
       load();
     })
+    
+    $(".tedit").change(function(){
+      $("#save-btn").addClass("btn-primary");
+      var errorInput = false;
+      if ($("#ton").val()===""){
+        errorInput = true;
+      }
 
+      if ($("#toff").val()===""){
+        errorInput = true;
+      }
+
+      if ($("#ton").val() > 125 || $("#ton").val() < -55){
+        errorInput = true;
+      }
+
+      if ($("#toff").val() > 125 || $("#toff").val() < -55){
+        errorInput = true;
+      }
+
+      if (errorInput){
+        load();
+      }
+
+    })
+
+    $("#login-btn").on('click', function(){
+      var userPass = $("#userpass").val();
+      $("#userpass").val("")
+      $.getJSON('ajax/login', { password: userPass}, function(data) {
+        load();
+      })
+    })
+    
 
   })
   </script>
@@ -82,6 +127,12 @@
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
       </ul>
+      <div class="navbar-form navbar-right" >
+        <div class="form-group" id="loginbox">
+          <input id="userpass" class="form-control" placeholder="Password" type="password">
+        </div>
+        <button id="login-btn" type="button" class="btn btn-default">Войти</button>
+      </div>
     </div>
   </nav>
   <div class="row ">
@@ -95,7 +146,6 @@
         <p id="mode" class="h3 text-info">NaN</p>
       </div>
     </div>
-
     <div class="col-lg-5">
       <div class="form-horizontal container">
         <fieldset>
@@ -103,19 +153,22 @@
           <div class="form-group">
             <label for="toff" class="col-lg-3 control-label">Температура включения</label>
             <div class="col-lg-2">
-              <input class="form-control" id="toff" placeholder="0.0" type="text">
+              <input class="form-control tedit" id="ton" placeholder="0.0" type="number" step="0.1">
             </div>
           </div>
           <div class="form-group">
             <label for="ton" class="col-lg-3 control-label">Температура выключения</label>
             <div class="col-lg-2">
-              <input class="form-control" id="ton" placeholder="0.0" type="text">
+              <input class="form-control tedit" id="toff" placeholder="0.0" type="number" step="0.1">
             </div>
           </div>
           <div class="form-group">
             <div class="col-lg-5">
-              <button type="button" id="update-btn" class="btn btn-default">Обновить</button>
-              <button type="button" id="save-btn" class="btn btn-primary">Сохранить</button>
+            <div class="navbar-right">
+              <button type="button" id="update-btn" class="btn btn-default">Прочитать уствки</button>
+              <button type="button" id="save-btn" class="btn btn-default">Сохранить</button>
+            </div>
+              
             </div>
           </div>
         </fieldset>

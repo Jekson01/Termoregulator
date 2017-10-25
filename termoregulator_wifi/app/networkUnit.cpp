@@ -15,6 +15,8 @@ namespace NetworkUnit {
 	BssList networks;
 	String network, password;
 	Timer connectionTimer;
+	bool isLogin = false;
+	Timer resetLoginTimer;
 }
 
 void NetworkUnit::start() {
@@ -22,12 +24,11 @@ void NetworkUnit::start() {
 	if (!settings.exist()){
 		settings.ssid = WIFI_SSID;
 		settings.password = WIFI_PWD;
+		settings.adminPass = ADMIN_PASS;
 		settings.save();
 	}
 
 	settings.load();
-	Serial.println(settings.ssid);
-	Serial.println(settings.password);
 
 	// Включение wifi станции
 	WifiStation.enable(true);
@@ -43,6 +44,7 @@ void NetworkUnit::start() {
 	WifiEvents.onStationConnect(isConnect);
 	WifiEvents.onStationDisconnect(isDisconnect);
 	WifiEvents.onAccessPointConnect(isAPConnect);
+	resetLoginTimer.initializeMs(300000, resetLogin);
 }
 
 void NetworkUnit::onIndex(HttpRequest& request, HttpResponse& response) {
@@ -54,7 +56,6 @@ void NetworkUnit::onIndex(HttpRequest& request, HttpResponse& response) {
 
 void NetworkUnit::onFile(HttpRequest& request, HttpResponse& response) {
 	String file = request.getPath();
-	Serial.println(file);
 	if (file[0] == '/')
 		file = file.substring(1);
 
@@ -67,7 +68,7 @@ void NetworkUnit::onFile(HttpRequest& request, HttpResponse& response) {
 }
 
 void NetworkUnit::onIPadress(IPAddress ip, IPAddress netmask, IPAddress gateway) {
-	Serial.println(__FUNCTION__);
+	WifiAccessPoint.enable(false);
 	startFTP();
 	startWebServer();
 }
@@ -78,7 +79,7 @@ void NetworkUnit::startFTP() {
 
 	// Start FTP server
 	ftp.listen(21);
-	ftp.addUser(FTP_LOGIN, FTP_PASS); // FTP account
+	ftp.addUser(FTP_LOGIN, ADMIN_PASS); // FTP account
 }
 
 void NetworkUnit::startWebServer() {
@@ -88,11 +89,13 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/setparams", onAjaxSetTRParams);
 	server.addPath("/ajax/getparams", onAjaxGetTRParam);
 	server.addPath("/ajax/get-networks", onAjaxGetNetworks);
+	server.addPath("/ajax/connect", onAjaxConnect);
+	server.addPath("/ajax/login", onAjaxLogin);
 	server.setDefaultHandler(onFile);
 
-	Serial.println("\r\n=== WEB SERVER STARTED ===");
+	/*Serial.println("\r\n=== WEB SERVER STARTED ===");
 	Serial.println(WifiStation.getIP());
-	Serial.println("==============================\r\n");
+	Serial.println("==============================\r\n");*/
 }
 
 void NetworkUnit::onAjaxGetTemperatura(HttpRequest& request,
@@ -103,6 +106,7 @@ void NetworkUnit::onAjaxGetTemperatura(HttpRequest& request,
 	sensor["temperatura"] = LocalUnit::getTemperature();
 	sensor["state"] = (bool)LocalUnit::regulator.isRelOut();
 	sensor["mode"] = (bool)LocalUnit::regulator.isHeating();
+	sensor["islogin"] = (bool)isLogin;
 	response.sendDataStream(stream, MIME_JSON);
 }
 
@@ -114,79 +118,49 @@ void NetworkUnit::onAjaxSetTRParams(HttpRequest& request,
 	LocalUnit::saveSettings();
 }
 
-void NetworkUnit::isConnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason) {
-	Serial.println(__FUNCTION__);
+void NetworkUnit::isConnect(String ssid, uint8_t ssidLength, uint8_t *bssid,
+		uint8_t reason) {
+
 }
 
 void NetworkUnit::isDisconnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason) {
-	Serial.println(__FUNCTION__);
+	if (!WifiAccessPoint.isEnabled()){
+		WifiAccessPoint.enable(true);
+	}
 }
 
 void NetworkUnit::isSystemReady() {
-	Serial.println(__FUNCTION__);
 	startFTP();
 	startWebServer();
 }
 
 void NetworkUnit::onAjaxGetTRParam(HttpRequest& request,
 		HttpResponse& response) {
-	Serial.print(">");
-	Serial.println(__FUNCTION__);
 	JsonObjectStream* stream = new JsonObjectStream();
 	JsonObject& json = stream->getRoot();
 	JsonObject& param = json.createNestedObject("param");
 	param["ton"] = LocalUnit::regulator.getTOn();
 	param["toff"] = LocalUnit::regulator.getTOff();
 	response.sendDataStream(stream, MIME_JSON);
-	Serial.println(__FUNCTION__);
+
 }
 
 void NetworkUnit::onAjaxConnect(HttpRequest& request, HttpResponse& response) {
-	JsonObjectStream* stream = new JsonObjectStream();
-	JsonObject& json = stream->getRoot();
-
-	String curNet = request.getPostParameter("network");
-	String curPass = request.getPostParameter("password");
-
-	bool updating = curNet.length() > 0
-			&& (WifiStation.getSSID() != curNet
-					|| WifiStation.getPassword() != curPass);
-	bool connectingNow = WifiStation.getConnectionStatus() == eSCS_Connecting
-			|| network.length() > 0;
-
-	if (updating && connectingNow) {
-		debugf("wrong action: %s %s, (updating: %d, connectingNow: %d)", network.c_str(), password.c_str(), updating, connectingNow);
-		json["status"] = (bool) false;
-		json["connected"] = (bool) false;
-	} else {
-		json["status"] = (bool) true;
-		if (updating) {
-			network = curNet;
-			password = curPass;
-			debugf("CONNECT TO: %s %s", network.c_str(), password.c_str());
-			json["connected"] = false;
-			connectionTimer.initializeMs(1200, makeConnection).startOnce();
-		} else {
-			json["connected"] = WifiStation.isConnected();
-			debugf("Network already selected. Current status: %s", WifiStation.getConnectionStatusName());
-		}
+	network = request.getQueryParameter("network");
+	password = request.getQueryParameter("password");
+	if (network.length() > 0){
+		WifiStation.disconnect();
+		connectionTimer.initializeMs(1200, makeConnection).startOnce();
 	}
-
-	if (!updating && !connectingNow && WifiStation.isConnectionFailed())
-		json["error"] = WifiStation.getConnectionStatusName();
-
-	response.setAllowCrossDomainOrigin("*");
-	response.sendDataStream(stream, MIME_JSON);
 }
 
 void NetworkUnit::makeConnection() {
-	WifiStation.enable(true);
 	WifiStation.config(network, password);
-
+	WifiStation.connect();
+	WifiStation.enable(true);
 	settings.ssid = network;
 	settings.password = password;
 	settings.save();
-
 	network = ""; // task completed
 }
 
@@ -243,9 +217,24 @@ void NetworkUnit::onAjaxGetNetworks(HttpRequest& request,
 }
 
 void NetworkUnit::isAPConnect(uint8_t[6], uint8_t) {
-	Serial.println(__FUNCTION__);
 }
 
 void NetworkUnit::updateNetworkList() {
 	WifiStation.startScan(networkScanCompleted);
+}
+
+void NetworkUnit::onAjaxLogin(HttpRequest& request, HttpResponse& response) {
+	isLogin = false;
+	String tmpPass = request.getQueryParameter("password");
+	if (tmpPass == settings.adminPass ){
+		isLogin = true;
+		resetLoginTimer.startOnce();
+	}else
+	{
+		isLogin = false;
+	}
+}
+
+void NetworkUnit::resetLogin() {
+	isLogin = false;
 }

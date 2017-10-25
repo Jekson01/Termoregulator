@@ -165,10 +165,36 @@ bool TM1637::getDio() {
 	return false;
 }
 
+
 void TM1637::print(uint16_t data) {
 	digits[2] = data % 10;
 	data /= 10;
 	digits[1] = data % 10;
 	data /= 10;
 	digits[0] = data % 10;
+}
+
+void TM1637::printT(int16_t data) {
+	if (data >= 0){
+		setPoint(POINT2);
+		print(data);
+	}else{
+		data *= -1;
+		digits[0] = S_minus;
+
+		if (data < 100){
+			setPoint(POINT2);
+			digits[2] = data % 10;
+			data /= 10;
+			digits[1] = data % 10;
+		}
+		else {
+			data /= 10;
+			setPoint(POINT3);
+			digits[2] = data % 10;
+			data /= 10;
+			digits[1] = data % 10;
+		}
+	}
+
 }

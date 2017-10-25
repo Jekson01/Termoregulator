@@ -64,15 +64,15 @@ void LocalUnit::updateMenu(){
 void LocalUnit::start() {
 
 	if(!trSettings.exist()){
-		trSettings.tOn = 250;
-		trSettings.tOff = 240;
+		trSettings.tOn = 240;
+		trSettings.tOff = 250;
 		trSettings.save();
 	}
 
 	trSettings.load();
 
 	sysio.initialize(5, 4, 2);
-	sysio.setPoint(POINT2);
+	//sysio.setPoint(POINT2);
 	regulator.setOnOffTemperature(trSettings.tOn, trSettings.tOff);
 	sensor.Init(14);
 	sensor.StartMeasure();
@@ -126,25 +126,29 @@ void LocalUnit::updateUI(){
 
 		switch (menuItem) {
 			case mRight:{
-				sysio.print(888);
+				sysio.printChar(0, S_t);
+				sysio.printChar(1, S_o);
+				sysio.printChar(2, S_n);
 				break;
 			}
 
 			case mRightEdit:{
-				sysio.print(regulator.getTOn());
+				sysio.printT(regulator.getTOn());
 				break;
 			}
 
 			case mLeft:{
-				sysio.print(777);
+				sysio.printChar(0, S_t);
+				sysio.printChar(1, S_o);
+				sysio.printChar(2, S_F);
 				break;
 			}
 			case mLeftEdit:{
-				sysio.print(regulator.getTOff());
+				sysio.printT(regulator.getTOff());
 				break;
 			}
 			default:
-				sysio.print(Temperatura);
+				sysio.printT(Temperatura);
 				break;
 		}
 
@@ -159,5 +163,4 @@ void LocalUnit::saveSettings() {
 	trSettings.tOn = regulator.getTOn();
 	trSettings.tOff = regulator.getTOff();
 	trSettings.save();
-	Serial.println("Save tr_settings");
 }
