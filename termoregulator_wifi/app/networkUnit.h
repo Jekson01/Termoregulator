@@ -39,10 +39,10 @@ namespace NetworkUnit {
 	void onAjaxGetNetworks(HttpRequest &request, HttpResponse &response);
 	void onAjaxConnect(HttpRequest &request, HttpResponse &response);
 	void onAjaxLogin(HttpRequest &request, HttpResponse &response);
+	void onAjaxCheckLogin(HttpRequest &request, HttpResponse &response);
 
 	void makeConnection();
 	void networkScanCompleted(bool succeeded, BssList list);
-	void getWifiSettings(HttpRequest &request, HttpResponse &response);
 	void updateNetworkList();
 
 	void resetLogin();

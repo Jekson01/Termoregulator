@@ -12,6 +12,20 @@
   <script>
   $(document).ready(function() {
 
+    (function checkLogin() {
+      $.getJSON("ajax/getlogin", function(data) {
+        if(data.state["islogin"]){
+          $("#btnconnect").removeClass("disabled");
+          $("#loginbox").hide();
+          $("#login-btn").text("Выйти");
+        }else{
+          $("#btnconnect").addClass("disabled");
+          $("#loginbox").show();
+          $("#login-btn").text("Войти");
+        }
+      })
+      setTimeout(checkLogin, 2000);
+    })()
 
     var netList;
 
@@ -21,9 +35,6 @@
         var status = data['status'];
         var conn = data['connected'];
         var netName = data['network'];
-        if (conn) {
-          $("#status").text("SSID:" + netName);
-        } else $("#status").text("Отключено");
 
         $(".newrow").remove();
         netList = data.available;
@@ -95,6 +106,14 @@
       })
     })
 
+    $("#login-btn").on('click', function(){
+      var userPass = $("#userpass").val();
+      $("#userpass").val("")
+      $.getJSON('ajax/login', { password: userPass}, function(data) {
+        load();
+      })
+    })
+
   });
   </script>
 </head>
@@ -106,9 +125,12 @@
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
       </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a id="status" href="#">Link</a></li>
-      </ul>
+      <div class="navbar-form navbar-right" >
+        <div class="form-group" id="loginbox">
+          <input id="userpass" class="form-control" placeholder="Password" type="password">
+        </div>
+        <button id="login-btn" type="button" class="btn btn-default">Войти</button>
+      </div>
     </div>
   </nav>
   <div class="panel panel-primary container">

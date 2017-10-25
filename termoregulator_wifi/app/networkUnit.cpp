@@ -91,6 +91,7 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/get-networks", onAjaxGetNetworks);
 	server.addPath("/ajax/connect", onAjaxConnect);
 	server.addPath("/ajax/login", onAjaxLogin);
+	server.addPath("/ajax/getlogin", onAjaxCheckLogin);
 	server.setDefaultHandler(onFile);
 
 	/*Serial.println("\r\n=== WEB SERVER STARTED ===");
@@ -106,7 +107,6 @@ void NetworkUnit::onAjaxGetTemperatura(HttpRequest& request,
 	sensor["temperatura"] = LocalUnit::getTemperature();
 	sensor["state"] = (bool)LocalUnit::regulator.isRelOut();
 	sensor["mode"] = (bool)LocalUnit::regulator.isHeating();
-	sensor["islogin"] = (bool)isLogin;
 	response.sendDataStream(stream, MIME_JSON);
 }
 
@@ -175,16 +175,6 @@ void NetworkUnit::networkScanCompleted(bool succeeded, BssList list) {
 			[](const BssInfo& a, const BssInfo& b) {return b.rssi - a.rssi;});
 }
 
-void NetworkUnit::getWifiSettings(HttpRequest& request,
-		HttpResponse& response) {
-	JsonObjectStream* stream = new JsonObjectStream();
-	JsonObject& json = stream->getRoot();
-	JsonObject& param = json.createNestedObject("wifiparam");
-	param["ssid"] = WifiStation.getSSID();
-
-	response.sendDataStream(stream, MIME_JSON);
-}
-
 void NetworkUnit::onAjaxGetNetworks(HttpRequest& request,
 		HttpResponse& response) {
 	updateNetworkList();
@@ -235,6 +225,18 @@ void NetworkUnit::onAjaxLogin(HttpRequest& request, HttpResponse& response) {
 	}
 }
 
+void NetworkUnit::onAjaxCheckLogin(HttpRequest& request,
+		HttpResponse& response) {
+
+	JsonObjectStream* stream = new JsonObjectStream();
+	JsonObject& json = stream->getRoot();
+	JsonObject& param = json.createNestedObject("state");
+	param["islogin"] = isLogin;
+
+	response.sendDataStream(stream, MIME_JSON);
+}
+
 void NetworkUnit::resetLogin() {
 	isLogin = false;
 }
+

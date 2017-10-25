@@ -32,21 +32,8 @@
           $("#ssensor").text("Выключено.");
         }
 
-        if(data.sensor['islogin']){
-          $("#save-btn").removeClass("disabled");
-          $("#ton").removeAttr('disabled');
-          $("#toff").removeAttr('disabled');
-          $("#loginbox").hide();
-          $("#login-btn").text("Выйти");
-        }else{
-          $("#ton").attr('disabled','disabled');
-          $("#toff").attr('disabled','disabled');
-          $("#save-btn").addClass("disabled");
-          $("#loginbox").show();
-          $("#login-btn").text("Войти");
-        }
-
       })
+      checkLogin();
       setTimeout(update, 2000);
     })()
 
@@ -66,6 +53,25 @@
         $("#save-btn").removeClass("btn-primary");
       })
     }
+
+    function checkLogin() {
+      $.getJSON("ajax/getlogin", function(data) {
+        if(data.state["islogin"]){
+          $("#save-btn").removeClass("disabled");
+          $("#ton").removeAttr('disabled');
+          $("#toff").removeAttr('disabled');
+          $("#loginbox").hide();
+          $("#login-btn").text("Выйти");
+        }else{
+          $("#ton").attr('disabled','disabled');
+          $("#toff").attr('disabled','disabled');
+          $("#save-btn").addClass("disabled");
+          $("#loginbox").show();
+          $("#login-btn").text("Войти");
+        }
+      })
+    }
+
 
     load();
 
