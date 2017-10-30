@@ -12,6 +12,7 @@
 #include <SmingCore/SmingCore.h>
 #include "localUnit.h"
 #include "settings.h"
+#include "lib/Convertor.h"
 
 #define WIFI_SSID "ASUS-8B3C"
 #define WIFI_PWD "12345678"
@@ -47,6 +48,7 @@ namespace NetworkUnit {
 	void updateNetworkList();
 
 	void resetLogin();
+	uint16_t hexToInt(uint8_t dh, uint8_t dl);
 }  // namespace NetUnit
 
 #endif /* APP_NETWORKUNIT_H_ */

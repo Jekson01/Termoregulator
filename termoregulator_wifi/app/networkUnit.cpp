@@ -261,8 +261,11 @@ void NetworkUnit::onAjaxGetArrayData(HttpRequest& request,
 
 void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
 		HttpResponse& response) {
-	String newName = request.getQueryParameter("newtitle");
+	String newName = urlToString(request.getQueryParameter("newtitle"));
 	String newPass = request.getQueryParameter("newpass");
+
+	//Serial.println(newName);
+	//Serial.println(newPass);
 	if (!isLogin)
 		return;
 
@@ -279,4 +282,3 @@ void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
 void NetworkUnit::resetLogin() {
 	isLogin = false;
 }
-

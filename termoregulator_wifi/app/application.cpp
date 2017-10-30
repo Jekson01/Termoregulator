@@ -10,8 +10,8 @@ void init()
 {
 	// need to debug
 	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
-	Serial.end();
-	//Serial.systemDebugOutput(false); // Enable debug output to serial
+	//Serial.end();
+	Serial.systemDebugOutput(false); // Enable debug output to serial
 
 	// Монтирование файловой системы
 	spiffs_mount();
