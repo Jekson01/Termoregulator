@@ -245,8 +245,8 @@ void NetworkUnit::onAjaxGetArrayData(HttpRequest& request,
 	JsonObject& json = stream->getRoot();
 	JsonObject& data = json.createNestedObject("data");
 
-	data["len"] = ARR_LENGTH;
-	data["pos"] = LocalUnit::arrPos;
+	json["len"] = ARR_LENGTH;
+	json["pos"] = LocalUnit::arrPos;
 
 	for (int i = 0; i < ARR_LENGTH; i++) {
 		char buff[3];

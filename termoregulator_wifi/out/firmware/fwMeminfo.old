@@ -4,7 +4,7 @@
     rodata|           ReadOnly Data (RAM)|    3FFE83A0|    3FFEB3CC|   12332
        bss|      Uninitialized Data (RAM)|    3FFEB3D0|    3FFF2580|   29104
       text|            Cached Code (IRAM)|    40100000|    40106B7C|   27516
-irom0_text|           Uncached Code (SPI)|    4020A000|    40250A3C|  289340
+irom0_text|           Uncached Code (SPI)|    4020A000|    402509A4|  289188
 Total Used RAM : 42356
 Free RAM : 39564
 Free IRam : 5270
