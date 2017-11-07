@@ -28,10 +28,11 @@ namespace NetworkUnit {
 	void onIPadress(IPAddress ip, IPAddress netmask, IPAddress gateway);
 	void startFTP();
 	void startWebServer();
+	void startMqttClient();
+
 	void isConnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
 	void isDisconnect(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
 	void isSystemReady();
-
 	void isAPConnect(uint8_t[6], uint8_t);
 
 	void onAjaxGetTemperatura(HttpRequest &request, HttpResponse &response);
@@ -41,14 +42,16 @@ namespace NetworkUnit {
 	void onAjaxConnect(HttpRequest &request, HttpResponse &response);
 	void onAjaxLogin(HttpRequest &request, HttpResponse &response);
 	void onAjaxCheckLogin(HttpRequest &request, HttpResponse &response);
-	void onAjaxGetArrayData(HttpRequest &request, HttpResponse &response);
 	void onAjaxSaveSettings(HttpRequest &request, HttpResponse &response);
 	void makeConnection();
 	void networkScanCompleted(bool succeeded, BssList list);
 	void updateNetworkList();
 
+	//void isMqttResive(String topic, String message);
+	void publishMqttMessage();
+
 	void resetLogin();
-	uint16_t hexToInt(uint8_t dh, uint8_t dl);
+
 }  // namespace NetUnit
 
 #endif /* APP_NETWORKUNIT_H_ */

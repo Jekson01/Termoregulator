@@ -8,22 +8,14 @@
   <title>Терморегулятор</title>
   <link rel="stylesheet" href="style.css">
   <link href="bootstrap.css" rel="stylesheet">
-  <script type="text/javascript" src="loader.js"></script>
-  <script src="jquery.js"></script>
+  <link rel="stylesheet" href="dygraph.css">
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dygraph.min.js"></script>
   <script>
   $(document).ready(function() {
     var sensorT;
-    var data;
-    var chart;
-
-    var options = {
-        title: 'Текущая температура',
-        curveType: 'function',
-        legend: { position: 'bottom' },
-        vAxis: {
-          title: '°C'
-        }
-      };
+    var arrData = [];
+    var g;
 
     (function update() {
       $.getJSON('ajax/temperatura', function(data) {
@@ -136,27 +128,34 @@
       })
     })
 
-    google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
-    function drawChart() {
-      data = new google.visualization.DataTable();
-      data.addColumn('datetime', 'Время');
-      data.addColumn('number', 'Температура, °C');
-      chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+    function drowChart(){
+            g = new Dygraph(
 
-      chart.draw(data, options);
-    }
+            // containing div
+            document.getElementById("graphdiv"),arrData,
+                          {
+                            rollPeriod: 14,
+                            xlabel: 'Время',
+                            ylabel: 'Температура',
+                            drawPoints: true,
+                            showRoller: true,
+                            pointSize: 3,
+                            strokeWidth: 3,
+                            labels: ['Время', 'Температура']
+                          });
+          };
+
+      drowChart();
 
     function addData(t) {
-      var tmp = parseFloat(t);
-      if (data.getNumberOfRows() >= 100)
+      if (arrData.length >= 100)
       {
-        data.removeRow(0);
+        arrData.splice(0, 1);
       }
-      data.addRows([
-        [new Date(), tmp]
-      ]);
-        chart.draw(data, options);
+      var x = new Date();  // current time
+      var y = parseFloat(t);
+      arrData.push([x, y]);
+      g.updateOptions( { 'file': arrData } );
     }
 
   })
@@ -218,7 +217,7 @@
     </div>
   </div>
 
-  <div panel container id="curve_chart" style="height: 500px"></div>
+  <div id="graphdiv" class="panel container" style="width: 800px;"></div>
 </body>
 
 </html>

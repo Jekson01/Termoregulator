@@ -10,6 +10,7 @@
 
 namespace NetworkUnit {
 
+	// HTTP server
 	HttpServer server;
 	FTPServer ftp;
 	BssList networks;
@@ -17,10 +18,13 @@ namespace NetworkUnit {
 	Timer connectionTimer;
 	bool isLogin = false;
 	Timer resetLoginTimer;
+
+	// MQTT client
+	Timer mqttTimer;
+	MqttClient *mqtt;
 }
 
 void NetworkUnit::start() {
-
 	if (!settings.exist()){
 		settings.ssid = WIFI_SSID;
 		settings.password = WIFI_PWD;
@@ -28,8 +32,9 @@ void NetworkUnit::start() {
 		settings.sensorName = "Tемпература";
 		settings.save();
 	}
-
 	settings.load();
+
+	//mqttSettings.load();
 
 	// Включение wifi станции
 	WifiStation.enable(true);
@@ -93,10 +98,12 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/connect", onAjaxConnect);
 	server.addPath("/ajax/login", onAjaxLogin);
 	server.addPath("/ajax/getlogin", onAjaxCheckLogin);
-	server.addPath("/ajax/getdata", onAjaxGetArrayData);
 	server.addPath("/ajax/savesettings", onAjaxSaveSettings);
 	server.setDefaultHandler(onFile);
 
+	mqtt = new MqttClient("192.168.1.121", 1883, 0);
+	mqttTimer.initializeMs(5000, publishMqttMessage).start();
+	//LocalUnit::onConversionCompleate(&publishMqttMessage);
 	/*Serial.println("\r\n=== WEB SERVER STARTED ===");
 	Serial.println(WifiStation.getIP());
 	Serial.println("==============================\r\n");*/
@@ -239,26 +246,6 @@ void NetworkUnit::onAjaxCheckLogin(HttpRequest& request,
 	response.sendDataStream(stream, MIME_JSON);
 }
 
-void NetworkUnit::onAjaxGetArrayData(HttpRequest& request,
-		HttpResponse& response) {
-	JsonObjectStream* stream = new JsonObjectStream();
-	JsonObject& json = stream->getRoot();
-	JsonObject& data = json.createNestedObject("data");
-
-	json["len"] = ARR_LENGTH;
-	json["pos"] = LocalUnit::arrPos;
-
-	for (int i = 0; i < ARR_LENGTH; i++) {
-		char buff[3];
-		itoa(i, buff, 10);
-		String item = "item_";
-		item += buff;
-		data[item] = LocalUnit::arr[i];
-	}
-
-	response.sendDataStream(stream, MIME_JSON);
-}
-
 void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
 		HttpResponse& response) {
 	String newName = urlToString(request.getQueryParameter("newtitle"));
@@ -278,6 +265,27 @@ void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
 	settings.save();
 	isLogin = false;
 }
+
+
+void NetworkUnit::startMqttClient() {
+	mqtt->connect("esp-test", "", "" );
+}
+
+/*void NetworkUnit::isMqttResive(String topic, String message) {
+}*/
+
+
+void NetworkUnit::publishMqttMessage() {
+	if (mqtt == null)
+		return;
+	if (mqtt->getConnectionState() != eTCS_Connected){
+		startMqttClient();
+	}
+	float t =((float)LocalUnit::getTemperature()) / 10;
+	mqtt->publish("esp-" + String(system_get_chip_id()) + "/temperatura", String(t));
+
+}
+
 
 void NetworkUnit::resetLogin() {
 	isLogin = false;
