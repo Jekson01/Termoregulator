@@ -115,7 +115,7 @@
       var userPass = $("#userpass").val();
       $("#userpass").val("")
       $.getJSON('ajax/login', { password: userPass}, function(data) {
-        load();
+        //load();
       })
     })
 
@@ -136,6 +136,7 @@
       <ul class="nav navbar-nav navbar-left">
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
+        <li><a href="mqttcfg">Настройка MQTT</a></li>
       </ul>
       <div class="navbar-form navbar-right" >
         <div class="form-group" id="loginbox">
@@ -145,7 +146,7 @@
       </div>
     </div>
   </nav>
-  <div class="panel panel-primary container">
+  <div class="col-lg-6 col-md-offset-3 panel panel-primary container">
     <div class="panel-heading">
       <h3 class="panel-title">Доступные сети</h3>
     </div>

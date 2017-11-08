@@ -13,7 +13,7 @@
 struct MqttSettings{
 	bool enable = false;
 	String broker;
-	int16_t port = 1883;
+	uint16_t port = 1883;
 	String clientId;
 	String username;
 	String pass;

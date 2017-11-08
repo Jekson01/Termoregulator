@@ -28,6 +28,7 @@ namespace LocalUnit {
 	void updateMenu();
 	void updateUI();
 	void saveSettings();
+	bool isCompleateConvert();
 
 }  // namespace LU
 

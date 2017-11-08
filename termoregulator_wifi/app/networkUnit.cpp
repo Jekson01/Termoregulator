@@ -22,6 +22,7 @@ namespace NetworkUnit {
 	// MQTT client
 	Timer mqttTimer;
 	MqttClient *mqtt;
+	bool mqttReady = true;
 }
 
 void NetworkUnit::start() {
@@ -34,7 +35,19 @@ void NetworkUnit::start() {
 	}
 	settings.load();
 
-	//mqttSettings.load();
+	if (!mqttSettings.exist()){
+		mqttSettings.enable = true;
+		mqttSettings.broker = "192.168.1.121";
+		mqttSettings.clientId = "esp-" + String(system_get_chip_id());
+		mqttSettings.pass = "";
+		mqttSettings.port = 1883;
+		mqttSettings.username = "";
+		mqttSettings.save();
+	}
+
+	mqttSettings.load();
+	mqttSettings.clientId = "esp-" + String(system_get_chip_id());
+	mqtt = new MqttClient(mqttSettings.broker, mqttSettings.port, isMqttResive);
 
 	// Включение wifi станции
 	WifiStation.enable(true);
@@ -77,6 +90,7 @@ void NetworkUnit::onIPadress(IPAddress ip, IPAddress netmask, IPAddress gateway)
 	WifiAccessPoint.enable(false);
 	startFTP();
 	startWebServer();
+	mqttTimer.initializeMs(1000, publishMqttMessage).start();
 }
 
 void NetworkUnit::startFTP() {
@@ -91,6 +105,7 @@ void NetworkUnit::startFTP() {
 void NetworkUnit::startWebServer() {
 	server.listen(80);
 	server.addPath("/", onIndex);
+	server.addPath("/mqttcfg", onAjaxMqttSettings);
 	server.addPath("/ajax/temperatura", onAjaxGetTemperatura);
 	server.addPath("/ajax/setparams", onAjaxSetTRParams);
 	server.addPath("/ajax/getparams", onAjaxGetTRParam);
@@ -99,10 +114,9 @@ void NetworkUnit::startWebServer() {
 	server.addPath("/ajax/login", onAjaxLogin);
 	server.addPath("/ajax/getlogin", onAjaxCheckLogin);
 	server.addPath("/ajax/savesettings", onAjaxSaveSettings);
+
 	server.setDefaultHandler(onFile);
 
-	mqtt = new MqttClient("192.168.1.121", 1883, 0);
-	mqttTimer.initializeMs(5000, publishMqttMessage).start();
 	//LocalUnit::onConversionCompleate(&publishMqttMessage);
 	/*Serial.println("\r\n=== WEB SERVER STARTED ===");
 	Serial.println(WifiStation.getIP());
@@ -216,6 +230,32 @@ void NetworkUnit::onAjaxGetNetworks(HttpRequest& request,
 	response.sendDataStream(stream, MIME_JSON);
 }
 
+void NetworkUnit::onAjaxMqttSettings(HttpRequest& request,
+		HttpResponse& response) {
+	if (request.method == HTTP_POST){
+
+		mqttSettings.enable = request.getPostParameter("mqtt") == "on";
+		mqttSettings.broker = request.getPostParameter("broker");
+		mqttSettings.port = (uint16_t)request.getPostParameter("port").toInt();
+		mqttSettings.username = request.getPostParameter("mqttuser");
+		mqttSettings.pass = request.getPostParameter("mqttpass");
+		mqtt = new MqttClient(mqttSettings.broker, mqttSettings.port, isMqttResive);
+		mqttSettings.save();
+	}
+
+	TemplateFileStream *tmpl = new TemplateFileStream("mqttcfg.html");
+	auto &vars = tmpl->variables();
+
+	vars["mqtt"] = mqttSettings.enable ? "checked='checked'" : "";
+	vars["broker"] = mqttSettings.broker;
+	vars["port"] = mqttSettings.port;
+	vars["mqttuser"] = mqttSettings.username;
+	vars["mqttpass"] = mqttSettings.pass;
+	vars["clientid"] = mqttSettings.clientId;
+
+	response.sendTemplate(tmpl);
+}
+
 void NetworkUnit::isAPConnect(uint8_t[6], uint8_t) {
 }
 
@@ -268,24 +308,51 @@ void NetworkUnit::onAjaxSaveSettings(HttpRequest& request,
 
 
 void NetworkUnit::startMqttClient() {
-	mqtt->connect("esp-test", "", "" );
-}
+	if(mqtt->connect(mqttSettings.clientId, mqttSettings.username, mqttSettings.pass )){
+		mqtt->subscribe(mqttSettings.clientId + "/p/#");
+	}
 
-/*void NetworkUnit::isMqttResive(String topic, String message) {
-}*/
+}
 
 
 void NetworkUnit::publishMqttMessage() {
+
+	if (!mqttSettings.enable)
+		return;
+
 	if (mqtt == null)
 		return;
-	if (mqtt->getConnectionState() != eTCS_Connected){
-		startMqttClient();
-	}
-	float t =((float)LocalUnit::getTemperature()) / 10;
-	mqtt->publish("esp-" + String(system_get_chip_id()) + "/temperatura", String(t));
 
+	if (mqttReady){
+		mqttReady = false;
+		if (mqtt->getConnectionState() != eTCS_Connected){
+			startMqttClient();
+		}
+
+		if (LocalUnit::isCompleateConvert()){
+			float t =((float)LocalUnit::getTemperature()) / 10;
+			mqtt->publish(mqttSettings.clientId + "/temperatura", String(t));
+			mqtt->publish(mqttSettings.clientId + "/relay", String(LocalUnit::regulator.isRelOut()));
+			mqtt->publish(mqttSettings.clientId + "/heatihg", String(LocalUnit::regulator.isHeating()));
+
+		}
+		mqttReady = true;
+	}
 }
 
+void NetworkUnit::isMqttResive(String topic, String message) {
+	//Serial.println(topic);
+	//Serial.println(message);
+	if (topic == mqttSettings.clientId + "/p/ton"){
+		int16_t t = (int16_t)(message.toFloat() * 10);
+		LocalUnit::regulator.setOnOffTemperature(t, LocalUnit::regulator.getTOff());
+	}
+
+	if (topic == mqttSettings.clientId + "/p/toff"){
+		int16_t t = (int16_t)(message.toFloat() * 10);
+		LocalUnit::regulator.setOnOffTemperature(LocalUnit::regulator.getTOn(), t);
+	}
+}
 
 void NetworkUnit::resetLogin() {
 	isLogin = false;

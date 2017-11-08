@@ -26,6 +26,7 @@ namespace LocalUnit {
 	Timer updateMenuTimer;
 	Timer updateSensorTimer;
 	uint8_t isChangeParams = 0;
+	bool compleateConvert = false;
 
 }  // namespace LU
 
@@ -36,6 +37,7 @@ void LocalUnit::updateSensor(){
 				float T = sensor.GetCelsius(0);
 				Temperatura = (int16_t)(T * 10);
 				regulator.check(Temperatura);
+				compleateConvert = true;
 			}
 		}
 		sensor.StartMeasure();
@@ -79,7 +81,7 @@ void LocalUnit::start() {
 
 	updateUITimer.initializeMs(200, updateUI).start();
 	updateMenuTimer.initializeMs(3000, updateMenu).start();
-	updateSensorTimer.initializeMs(5000, updateSensor).start();
+	updateSensorTimer.initializeMs(2500, updateSensor).start();
 }
 
 void LocalUnit::updateUI(){
@@ -162,4 +164,12 @@ void LocalUnit::saveSettings() {
 	trSettings.tOn = regulator.getTOn();
 	trSettings.tOff = regulator.getTOff();
 	trSettings.save();
+}
+
+bool LocalUnit::isCompleateConvert() {
+	if (compleateConvert){
+		compleateConvert = false;
+		return true;
+	}
+	return false;
 }

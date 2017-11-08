@@ -128,34 +128,32 @@
       })
     })
 
-    function drowChart(){
-            g = new Dygraph(
+    function drowChart() {
+      g = new Dygraph(
 
-            // containing div
-            document.getElementById("graphdiv"),arrData,
-                          {
-                            rollPeriod: 14,
-                            xlabel: 'Время',
-                            ylabel: 'Температура',
-                            drawPoints: true,
-                            showRoller: true,
-                            pointSize: 3,
-                            strokeWidth: 3,
-                            labels: ['Время', 'Температура']
-                          });
-          };
+        // containing div
+        document.getElementById("graphdiv"), arrData, {
+          rollPeriod: 14,
+          xlabel: 'Время',
+          ylabel: 'Температура',
+          drawPoints: true,
+          showRoller: true,
+          pointSize: 3,
+          strokeWidth: 3,
+          labels: ['Время', 'Температура']
+        });
+    };
 
-      drowChart();
+    drowChart();
 
     function addData(t) {
-      if (arrData.length >= 100)
-      {
+      if (arrData.length >= 100) {
         arrData.splice(0, 1);
       }
-      var x = new Date();  // current time
+      var x = new Date(); // current time
       var y = parseFloat(t);
       arrData.push([x, y]);
-      g.updateOptions( { 'file': arrData } );
+      g.updateOptions({ 'file': arrData });
     }
 
   })
@@ -168,6 +166,7 @@
       <ul class="nav navbar-nav navbar-left">
         <li><a href="index.html">Главная</a></li>
         <li><a href="wifisettings.html">Настройка Wifi</a></li>
+        <li><a href="mqttcfg">Настройка MQTT</a></li>
       </ul>
       <div class="navbar-form navbar-right">
         <div class="form-group" id="loginbox">
@@ -178,7 +177,7 @@
     </div>
   </nav>
   <div class="row ">
-    <div class="col-lg-7 panel panel-primary text-center container">
+    <div class="col-lg-5 col-md-offset-1 panel panel-primary text-center container">
       <div class="panel-heading ">
         <h3 class="panel-title" id="sensor-title">Текущая температура</h3>
       </div>
@@ -188,36 +187,29 @@
         <p id="mode" class="h3 text-info">NaN</p>
       </div>
     </div>
-    <div class="col-lg-5">
-      <div class="form-horizontal container">
-        <fieldset>
-          <legend>Параметры</legend>
-          <div class="form-group">
-            <label for="toff" class="col-lg-3 control-label">Температура включения</label>
-            <div class="col-lg-2">
-              <input class="form-control tedit" id="ton" placeholder="0.0" type="number" step="0.1">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="ton" class="col-lg-3 control-label">Температура выключения</label>
-            <div class="col-lg-2">
-              <input class="form-control tedit" id="toff" placeholder="0.0" type="number" step="0.1">
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="col-lg-5">
-              <div class="navbar-right">
-                <button type="button" id="update-btn" class="btn btn-default">Прочитать уствки</button>
-                <button type="button" id="save-btn" class="btn btn-default">Сохранить</button>
-              </div>
-            </div>
-          </div>
-        </fieldset>
+    <div class="col-lg-4 col-md-offset-1 panel panel-primary container">
+      <div class="panel-heading ">
+        <h3 class="panel-title">Параметры</h3>
       </div>
+      <fieldset>
+        <div class="form-group">
+          <label for="ton" class="control-label">Температура включения</label>
+          <input class="form-control tedit" id="ton" placeholder="0.0" type="number" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="toff" class="control-label">Температура выключения</label>
+          <input class="form-control tedit" id="toff" placeholder="0.0" type="number" step="0.1">
+        </div>
+        <div class="form-group">
+          <button type="button" id="update-btn" class="btn btn-default">Прочитать уствки</button>
+          <button type="button" id="save-btn" class="btn btn-default">Сохранить</button>
+        </div>
+      </fieldset>
     </div>
   </div>
-
-  <div id="graphdiv" class="panel container" style="width: 800px;"></div>
+  <div col-md-offset-1 class="col-lg-10 panel container">
+    <div id="graphdiv" style="width: auto;"></div>
+  </div>
 </body>
 
 </html>

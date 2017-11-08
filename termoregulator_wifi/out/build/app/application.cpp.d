@@ -285,4 +285,5 @@ out/build/app/application.o: app/application.cpp include/user_config.h \
  /opt/Sming/Sming/Libraries/DS18S20/ds18s20.h \
  /opt/Sming/Sming/Libraries/DS18S20/../../SmingCore/Wire.h \
  app/lib/TM1637.h app/lib/RelayRegulator.h include/tr_settings.h \
- app/networkUnit.h include/settings.h app/lib/Convertor.h
+ app/networkUnit.h include/settings.h app/lib/Convertor.h \
+ include/mqtt_settings.h

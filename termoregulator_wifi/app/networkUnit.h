@@ -13,6 +13,7 @@
 #include "localUnit.h"
 #include "settings.h"
 #include "lib/Convertor.h"
+#include "mqtt_settings.h"
 
 #define WIFI_SSID "ASUS-8B3C"
 #define WIFI_PWD "12345678"
@@ -43,11 +44,12 @@ namespace NetworkUnit {
 	void onAjaxLogin(HttpRequest &request, HttpResponse &response);
 	void onAjaxCheckLogin(HttpRequest &request, HttpResponse &response);
 	void onAjaxSaveSettings(HttpRequest &request, HttpResponse &response);
+	void onAjaxMqttSettings(HttpRequest &request, HttpResponse &response);
 	void makeConnection();
 	void networkScanCompleted(bool succeeded, BssList list);
 	void updateNetworkList();
 
-	//void isMqttResive(String topic, String message);
+	void isMqttResive(String topic, String message);
 	void publishMqttMessage();
 
 	void resetLogin();

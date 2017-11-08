@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru-RU">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Настройка MQTT</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="bootstrap.css" rel="stylesheet">
+  <script src="jquery.js"></script>
+  <script>
+  $(document).ready(function() {
+
+    (function checkLogin() {
+      $.getJSON("ajax/getlogin", function(data) {
+
+        $("#newtitle").attr('placeholder', data.state['title']);
+
+        if (data.state["islogin"]) {
+
+          $("#loginbox").hide();
+          $("#login-btn").text("Выйти");
+          $(".fsparams").removeAttr('disabled');
+
+        } else {
+
+          $("#loginbox").show();
+          $("#login-btn").text("Войти");
+          $(".fsparams").attr('disabled', 'disabled');
+        }
+      })
+      setTimeout(checkLogin, 2000);
+    })()
+
+    $("#login-btn").on('click', function() {
+      var userPass = $("#userpass").val();
+      $("#userpass").val("")
+      $.getJSON('ajax/login', { password: userPass }, function(data) {
+        //load();
+      })
+    });
+
+  });
+  </script>
+</head>
+
+<body >
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav navbar-left">
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="wifisettings.html">Настройка Wifi</a></li>
+        <li><a href="mqttcfg">Настройка MQTT</a></li>
+      </ul>
+      <div class="navbar-form navbar-right">
+        <div class="form-group" id="loginbox">
+          <input id="userpass" class="form-control" placeholder="Password" type="password">
+        </div>
+        <button id="login-btn" type="button" class="btn btn-default">Войти</button>
+      </div>
+    </div>
+  </nav>
+  <div class="row">
+    <div class="col-lg-6 col-md-offset-3 panel panel-primary container">
+      <div class="panel-heading ">
+        <h3 class="panel-title">Настройка MQTT</h3>
+      </div>
+      <form method="post" action="">
+        <fieldset class="fsparams" disabled="disabled">
+          <legend>
+            <label>id клиента : {clientid}</label>
+          </legend>
+          <div class="form-check">
+            <label class="form-check-label">
+              <input class="form-check-input" type="checkbox" name="mqtt" {mqtt}> Включить MQTT
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="nbroker">URL или IP брокера</label>
+            <input id="nbroker" class="form-control" type="text" name="broker" value="{broker}">
+          </div>
+          <div class="form-group">
+            <label for="nport">Порт</label>
+            <input id="nport" class="form-control" type="text" name="port" value="{port}">
+          </div>
+          <div class="form-group">
+            <label for="nusername">Имя пользователя</label>
+            <input id="nusername" type="text" class="form-control" name="mqttuser" value="{mqttuser}">
+          </div>
+          <div class="form-group">
+            <label for="npass">Пароль</label>
+            <input id="npass" type="password" class="form-control" name="mqttpass" value="{mqttpass}">
+          </div>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
